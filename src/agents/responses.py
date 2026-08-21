@@ -43,4 +43,6 @@ def generate_agent_response(
         model_name=output.model_name,
         request_id=output.request_id,
         seed=output.seed,
+        latency_ms=output.latency_ms,
+        token_count=output.token_count,
     )

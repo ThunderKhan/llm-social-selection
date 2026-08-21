@@ -1,0 +1,4 @@
+[tool.pytest.ini_options]
+markers = [
+    "ollama: requires the local Ollama service and configured model",
+]
