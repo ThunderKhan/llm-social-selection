@@ -1,3 +1,4 @@
+from ..ballots import BallotProvider, DeterministicBallotProvider
 from ..agents import generate_agent_response
 from ..models import ModelProvider
 from ..scoring import score_response
@@ -7,7 +8,6 @@ from ..selection import (
     RandomSelectionStrategy,
     SelectionStrategy,
 )
-from .ballots import generate_support_ballot
 from .context import RoundContext
 from .result import RoundResult
 from .seeds import derive_seed
@@ -22,6 +22,9 @@ def _strategy_for(context: RoundContext) -> SelectionStrategy:
 
 
 class RoundEngine:
+    def __init__(self, ballot_provider: BallotProvider | None = None) -> None:
+        self.ballot_provider = ballot_provider or DeterministicBallotProvider()
+
     def execute(self, context: RoundContext, provider: ModelProvider) -> RoundResult:
         responses = tuple(
             generate_agent_response(
@@ -48,23 +51,24 @@ class RoundEngine:
         )
 
         scores = tuple(score_response(response, context.task) for response in responses)
-        eligible_ids = tuple(agent.agent_id for agent in context.population.agents)
-        ballots = tuple(
-            generate_support_ballot(
+        ballot_generations = tuple(
+            self.ballot_provider.generate_ballot(
                 trial_id=context.trial_id,
                 round_index=context.round_index,
-                task_id=context.task.task_id,
-                voter_agent_id=agent.agent_id,
-                eligible_agent_ids=eligible_ids,
+                trial_seed=context.seed,
+                task=context.task,
+                voter=agent,
+                population=context.population,
                 responses=responses,
-                seed=derive_seed(
-                    context.seed,
-                    context.round_index,
-                    "ballot",
-                    agent.agent_id,
-                ),
+                model_provider=provider,
             )
             for agent in context.population.agents
+        )
+        ballots = tuple(generation.ballot for generation in ballot_generations)
+        ballot_evidence = tuple(
+            generation.evidence
+            for generation in ballot_generations
+            if generation.evidence is not None
         )
 
         selection_namespace = {
@@ -92,4 +96,5 @@ class RoundEngine:
             scores=scores,
             ballots=ballots,
             selection=selection,
+            ballot_evidence=ballot_evidence,
         )

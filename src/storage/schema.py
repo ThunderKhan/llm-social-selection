@@ -126,9 +126,9 @@ CREATE TABLE ballots (
     trial_id TEXT NOT NULL,
     round_index INTEGER NOT NULL,
     voter_agent_id TEXT NOT NULL,
-    supported_agent_id TEXT NOT NULL,
+    supported_agent_id TEXT,
     ordinal INTEGER NOT NULL CHECK (ordinal >= 0),
-    CHECK (voter_agent_id <> supported_agent_id),
+    CHECK (supported_agent_id IS NULL OR voter_agent_id <> supported_agent_id),
     UNIQUE (trial_id, round_index, voter_agent_id),
     UNIQUE (trial_id, round_index, ordinal),
     FOREIGN KEY (trial_id, round_index)
@@ -136,6 +136,36 @@ CREATE TABLE ballots (
     FOREIGN KEY (trial_id, voter_agent_id)
         REFERENCES agent_instances(trial_id, agent_id),
     FOREIGN KEY (trial_id, supported_agent_id)
+        REFERENCES agent_instances(trial_id, agent_id)
+);
+
+CREATE TABLE ballot_evidence (
+    ballot_id TEXT PRIMARY KEY,
+    trial_id TEXT NOT NULL,
+    round_index INTEGER NOT NULL,
+    task_id TEXT NOT NULL,
+    voter_agent_id TEXT NOT NULL,
+    ordinal INTEGER NOT NULL CHECK (ordinal >= 0),
+    provider_name TEXT NOT NULL,
+    model_name TEXT NOT NULL,
+    request_id TEXT NOT NULL,
+    seed TEXT,
+    raw_output TEXT NOT NULL,
+    parsed_choice TEXT,
+    valid INTEGER NOT NULL CHECK (valid IN (0, 1)),
+    invalid_reason TEXT,
+    candidate_order_json TEXT NOT NULL,
+    CHECK (
+        (valid = 1 AND parsed_choice IS NOT NULL AND invalid_reason IS NULL)
+        OR
+        (valid = 0 AND parsed_choice IS NULL AND invalid_reason IS NOT NULL)
+    ),
+    UNIQUE (trial_id, round_index, voter_agent_id),
+    UNIQUE (trial_id, round_index, ordinal),
+    FOREIGN KEY (ballot_id) REFERENCES ballots(ballot_id),
+    FOREIGN KEY (trial_id, round_index, task_id)
+        REFERENCES rounds(trial_id, round_index, task_id),
+    FOREIGN KEY (trial_id, voter_agent_id)
         REFERENCES agent_instances(trial_id, agent_id)
 );
 

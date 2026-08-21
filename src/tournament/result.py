@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from ..domain import Ballot, Response, Score, SelectionEvent
+from ..domain import Ballot, BallotEvidence, Response, Score, SelectionEvent
 from ..tasks import Task
 
 
@@ -13,3 +13,4 @@ class RoundResult:
     scores: tuple[Score, ...]
     ballots: tuple[Ballot, ...]
     selection: SelectionEvent
+    ballot_evidence: tuple[BallotEvidence, ...] = ()

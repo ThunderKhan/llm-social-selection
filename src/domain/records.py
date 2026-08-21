@@ -70,19 +70,87 @@ class Ballot:
     trial_id: str
     round_index: int
     voter_agent_id: str
-    supported_agent_id: str
+    supported_agent_id: str | None
 
     def __post_init__(self) -> None:
         for field, value in (
             ("ballot_id", self.ballot_id),
             ("trial_id", self.trial_id),
             ("voter_agent_id", self.voter_agent_id),
-            ("supported_agent_id", self.supported_agent_id),
         ):
             _require_non_empty(value, field)
         _require_round_index(self.round_index)
+        if self.supported_agent_id is not None:
+            _require_non_empty(self.supported_agent_id, "supported_agent_id")
         if self.voter_agent_id == self.supported_agent_id:
             raise ValueError("support ballot cannot vote for the same agent")
+
+
+@dataclass(frozen=True)
+class BallotCandidate:
+    label: str
+    agent_id: str
+    response_id: str
+
+    def __post_init__(self) -> None:
+        _require_non_empty(self.label, "label")
+        _require_non_empty(self.agent_id, "agent_id")
+        _require_non_empty(self.response_id, "response_id")
+
+
+@dataclass(frozen=True)
+class BallotEvidence:
+    ballot_id: str
+    trial_id: str
+    round_index: int
+    task_id: str
+    voter_agent_id: str
+    provider_name: str
+    model_name: str
+    request_id: str
+    seed: int | None
+    raw_output: str
+    parsed_choice: str | None
+    valid: bool
+    invalid_reason: str | None
+    candidate_order: tuple[BallotCandidate, ...]
+
+    def __post_init__(self) -> None:
+        for field, value in (
+            ("ballot_id", self.ballot_id),
+            ("trial_id", self.trial_id),
+            ("task_id", self.task_id),
+            ("voter_agent_id", self.voter_agent_id),
+            ("provider_name", self.provider_name),
+            ("model_name", self.model_name),
+            ("request_id", self.request_id),
+            ("raw_output", self.raw_output),
+        ):
+            _require_non_empty(value, field)
+        _require_round_index(self.round_index)
+        if self.seed is not None and (
+            not isinstance(self.seed, int) or isinstance(self.seed, bool)
+        ):
+            raise ValueError("seed must be an integer or None")
+        candidates = tuple(self.candidate_order)
+        if len(candidates) != 7:
+            raise ValueError("candidate_order must contain exactly 7 candidates")
+        if len({candidate.label for candidate in candidates}) != 7:
+            raise ValueError("candidate labels must be unique")
+        if len({candidate.agent_id for candidate in candidates}) != 7:
+            raise ValueError("candidate agent IDs must be unique")
+        if self.voter_agent_id in {candidate.agent_id for candidate in candidates}:
+            raise ValueError("candidate_order must exclude the voter")
+        if self.valid:
+            if self.parsed_choice not in {candidate.label for candidate in candidates}:
+                raise ValueError("valid ballot evidence requires an eligible parsed_choice")
+            if self.invalid_reason is not None:
+                raise ValueError("valid ballot evidence cannot have invalid_reason")
+        else:
+            if self.parsed_choice is not None:
+                raise ValueError("invalid ballot evidence cannot have parsed_choice")
+            _require_non_empty(self.invalid_reason, "invalid_reason")
+        object.__setattr__(self, "candidate_order", candidates)
 
 
 @dataclass(frozen=True)

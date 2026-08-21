@@ -32,14 +32,18 @@ class PeerVoteSelectionStrategy(SelectionStrategy):
                 raise SelectionError("ballot references do not match the selection context")
             if ballot.voter_agent_id not in eligible:
                 raise SelectionError(f"ineligible voter: {ballot.voter_agent_id}")
-            if ballot.supported_agent_id not in eligible:
+            if (
+                ballot.supported_agent_id is not None
+                and ballot.supported_agent_id not in eligible
+            ):
                 raise SelectionError(
                     f"ineligible supported agent: {ballot.supported_agent_id}"
                 )
             if ballot.voter_agent_id in voters:
                 raise SelectionError(f"duplicate voter ballot: {ballot.voter_agent_id}")
             voters.add(ballot.voter_agent_id)
-            counts[ballot.supported_agent_id] += 1
+            if ballot.supported_agent_id is not None:
+                counts[ballot.supported_agent_id] += 1
 
         if voters != eligible:
             missing = ", ".join(sorted(eligible - voters))

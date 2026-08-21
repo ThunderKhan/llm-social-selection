@@ -12,6 +12,8 @@ from typing import Any, cast
 from ..agents import AgentIdentity
 from ..domain import (
     Ballot,
+    BallotCandidate,
+    BallotEvidence,
     ReplacementEvent,
     Response,
     Score,
@@ -425,6 +427,7 @@ class SQLiteEventStore:
                 self._insert_responses(result.responses)
                 self._insert_scores(result.scores)
                 self._insert_ballots(result.ballots)
+                self._insert_ballot_evidence(result.ballot_evidence)
                 self._insert_selection(result.selection)
                 if replacement_event is not None and replacement_agent is not None:
                     self._insert_replacement(replacement_event, replacement_agent)
@@ -537,6 +540,27 @@ class SQLiteEventStore:
             )
             for row in self._rows_for_round("ballots", trial_id, round_index)
         )
+        ballot_evidence = tuple(
+            BallotEvidence(
+                ballot_id=row["ballot_id"],
+                trial_id=row["trial_id"],
+                round_index=row["round_index"],
+                task_id=row["task_id"],
+                voter_agent_id=row["voter_agent_id"],
+                provider_name=row["provider_name"],
+                model_name=row["model_name"],
+                request_id=row["request_id"],
+                seed=int(row["seed"]) if row["seed"] is not None else None,
+                raw_output=row["raw_output"],
+                parsed_choice=row["parsed_choice"],
+                valid=bool(row["valid"]),
+                invalid_reason=row["invalid_reason"],
+                candidate_order=self._decode_candidate_order(
+                    row["candidate_order_json"]
+                ),
+            )
+            for row in self._rows_for_round("ballot_evidence", trial_id, round_index)
+        )
         for name, records in (
             ("responses", responses),
             ("scores", scores),
@@ -546,6 +570,10 @@ class SQLiteEventStore:
                 raise IntegrityError(
                     f"committed round {trial_id}/{round_index} has {len(records)} {name}; expected 8"
                 )
+        if len(ballot_evidence) not in (0, 8):
+            raise IntegrityError(
+                f"committed round {trial_id}/{round_index} has partial ballot evidence"
+            )
         selection_row = self._connection.execute(
             """
             SELECT * FROM selection_events
@@ -573,6 +601,7 @@ class SQLiteEventStore:
             scores=scores,
             ballots=ballots,
             selection=selection,
+            ballot_evidence=ballot_evidence,
         )
 
     def last_committed_round(self, trial_id: str) -> int | None:
@@ -675,9 +704,60 @@ class SQLiteEventStore:
             if (
                 ballot.trial_id != context.trial_id
                 or ballot.round_index != context.round_index
-                or ballot.supported_agent_id not in eligible
+                or (
+                    ballot.supported_agent_id is not None
+                    and ballot.supported_agent_id not in eligible
+                )
             ):
                 raise IntegrityError("support ballot references do not match the round context")
+
+        evidence = result.ballot_evidence
+        if evidence and len(evidence) != len(eligible):
+            raise IntegrityError(
+                "ballot evidence must be empty or contain one record per eligible voter"
+            )
+        if not evidence and any(
+            ballot.supported_agent_id is None for ballot in result.ballots
+        ):
+            raise IntegrityError("abstentions require auditable ballot evidence")
+        ballot_by_id = {ballot.ballot_id: ballot for ballot in result.ballots}
+        response_ids = {response.response_id for response in result.responses}
+        evidence_voters: set[str] = set()
+        for item in evidence:
+            ballot = ballot_by_id.get(item.ballot_id)
+            if ballot is None:
+                raise IntegrityError("ballot evidence references an unknown ballot")
+            if (
+                item.trial_id != context.trial_id
+                or item.round_index != context.round_index
+                or item.task_id != context.task.task_id
+                or item.voter_agent_id != ballot.voter_agent_id
+            ):
+                raise IntegrityError("ballot evidence references do not match the round context")
+            if item.voter_agent_id in evidence_voters:
+                raise IntegrityError("duplicate ballot evidence voter")
+            evidence_voters.add(item.voter_agent_id)
+            if (
+                item.provider_name != trial["provider_name"]
+                or item.model_name != trial["model_name"]
+            ):
+                raise IntegrityError(
+                    "ballot evidence provider metadata does not match the experiment"
+                )
+            candidate_by_label = {
+                candidate.label: candidate for candidate in item.candidate_order
+            }
+            if {candidate.response_id for candidate in item.candidate_order} - response_ids:
+                raise IntegrityError("ballot evidence references an unknown response")
+            expected_agents = eligible - {item.voter_agent_id}
+            if {candidate.agent_id for candidate in item.candidate_order} != expected_agents:
+                raise IntegrityError("ballot evidence candidate set is invalid")
+            if item.valid:
+                candidate = candidate_by_label[cast(str, item.parsed_choice)]
+                if ballot.supported_agent_id != candidate.agent_id:
+                    raise IntegrityError("parsed ballot choice does not match final ballot")
+            elif ballot.supported_agent_id is not None:
+                raise IntegrityError("invalid ballot evidence must produce an abstention")
 
         selection = result.selection
         if (
@@ -923,6 +1003,52 @@ class SQLiteEventStore:
             ),
         )
 
+    def _insert_ballot_evidence(
+        self, evidence: tuple[BallotEvidence, ...]
+    ) -> None:
+        self._connection.executemany(
+            """
+            INSERT INTO ballot_evidence (
+                ballot_id, trial_id, round_index, task_id, voter_agent_id,
+                ordinal, provider_name, model_name, request_id, seed,
+                raw_output, parsed_choice, valid, invalid_reason,
+                candidate_order_json
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                (
+                    item.ballot_id,
+                    item.trial_id,
+                    item.round_index,
+                    item.task_id,
+                    item.voter_agent_id,
+                    ordinal,
+                    item.provider_name,
+                    item.model_name,
+                    item.request_id,
+                    str(item.seed) if item.seed is not None else None,
+                    item.raw_output,
+                    item.parsed_choice,
+                    int(item.valid),
+                    item.invalid_reason,
+                    json.dumps(
+                        [
+                            {
+                                "agent_id": candidate.agent_id,
+                                "label": candidate.label,
+                                "response_id": candidate.response_id,
+                            }
+                            for candidate in item.candidate_order
+                        ],
+                        sort_keys=True,
+                        separators=(",", ":"),
+                        ensure_ascii=False,
+                    ),
+                )
+                for ordinal, item in enumerate(evidence)
+            ),
+        )
+
     def _insert_selection(self, selection: SelectionEvent) -> None:
         self._connection.execute(
             """
@@ -944,12 +1070,30 @@ class SQLiteEventStore:
     def _rows_for_round(
         self, table: str, trial_id: str, round_index: int
     ) -> list[sqlite3.Row]:
-        if table not in {"responses", "scores", "ballots"}:
+        if table not in {"responses", "scores", "ballots", "ballot_evidence"}:
             raise ValueError(f"unsupported round table: {table}")
         return self._connection.execute(
             f"SELECT * FROM {table} WHERE trial_id = ? AND round_index = ? ORDER BY ordinal",
             (trial_id, round_index),
         ).fetchall()
+
+    @staticmethod
+    def _decode_candidate_order(value: str) -> tuple[BallotCandidate, ...]:
+        try:
+            rows = json.loads(value)
+            if not isinstance(rows, list):
+                raise TypeError
+            return tuple(
+                BallotCandidate(
+                    label=row["label"],
+                    agent_id=row["agent_id"],
+                    response_id=row["response_id"],
+                )
+                for row in rows
+                if isinstance(row, dict)
+            )
+        except (KeyError, TypeError, json.JSONDecodeError) as error:
+            raise IntegrityError("invalid persisted ballot candidate order") from error
 
     @staticmethod
     def _validate_canonical_config(config_hash: str, config_json: str) -> None:
