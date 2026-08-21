@@ -1,7 +1,10 @@
 import argparse
+import sys
+
+from .config import ConfigError, hash_config, load_config
 
 
-def main() -> None:
+def main() -> int:
     parser = argparse.ArgumentParser(
         prog="llm-social-selection",
         description="Reproducible LLM social-selection experiment framework.",
@@ -22,8 +25,21 @@ def main() -> None:
     args = parser.parse_args()
 
     if args.command == "validate":
-        print(f"Validating configuration: {args.config}")
+        try:
+            config = load_config(args.config)
+        except ConfigError as error:
+            print(f"Configuration invalid:\n{error}", file=sys.stderr)
+            return 1
+
+        print("Configuration valid")
+        print(f"Schema version: {config.experiment.schema_version}")
+        print(f"Selection mechanism: {config.selection.mechanism}")
+        print(f"Population size: {config.population.size}")
+        print(f"Config hash: {hash_config(config)[:12]}")
+        return 0
+
+    return 2
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

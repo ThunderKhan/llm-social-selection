@@ -1,0 +1,35 @@
+experiment:
+  name: peer_selection_smoke
+  schema_version: 1
+  seed: 42
+  trials: 1
+  rounds: 10
+
+population:
+  size: 8
+  profiles_file: configs/profiles.yaml
+
+model:
+  provider: mock
+  model: deterministic-v1
+  temperature: 0
+
+task:
+  source: fixtures/tasks.json
+  order: seeded
+
+information:
+  response_authorship_visible: false
+  prior_votes_visible: false
+
+selection:
+  mechanism: peer_vote
+  tie_break: seeded_random
+  self_vote: forbidden
+  invalid_ballot: abstain
+
+replacement:
+  mechanism: fixed_profile_pool
+
+storage:
+  sqlite_path: experiments/peer_selection_smoke.sqlite
