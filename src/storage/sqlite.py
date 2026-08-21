@@ -558,6 +558,8 @@ class SQLiteEventStore:
                 candidate_order=self._decode_candidate_order(
                     row["candidate_order_json"]
                 ),
+                latency_ms=row["latency_ms"],
+                token_count=row["token_count"],
             )
             for row in self._rows_for_round("ballot_evidence", trial_id, round_index)
         )
@@ -1012,8 +1014,8 @@ class SQLiteEventStore:
                 ballot_id, trial_id, round_index, task_id, voter_agent_id,
                 ordinal, provider_name, model_name, request_id, seed,
                 raw_output, parsed_choice, valid, invalid_reason,
-                candidate_order_json
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                candidate_order_json, latency_ms, token_count
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 (
@@ -1044,6 +1046,8 @@ class SQLiteEventStore:
                         separators=(",", ":"),
                         ensure_ascii=False,
                     ),
+                    item.latency_ms,
+                    item.token_count,
                 )
                 for ordinal, item in enumerate(evidence)
             ),

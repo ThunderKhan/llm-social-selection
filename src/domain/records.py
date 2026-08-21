@@ -114,6 +114,8 @@ class BallotEvidence:
     valid: bool
     invalid_reason: str | None
     candidate_order: tuple[BallotCandidate, ...]
+    latency_ms: float | None = None
+    token_count: int | None = None
 
     def __post_init__(self) -> None:
         for field, value in (
@@ -132,6 +134,19 @@ class BallotEvidence:
             not isinstance(self.seed, int) or isinstance(self.seed, bool)
         ):
             raise ValueError("seed must be an integer or None")
+        if self.latency_ms is not None and (
+            not isinstance(self.latency_ms, (int, float))
+            or isinstance(self.latency_ms, bool)
+            or not isfinite(self.latency_ms)
+            or self.latency_ms < 0
+        ):
+            raise ValueError("latency_ms must be a non-negative finite number or None")
+        if self.token_count is not None and (
+            not isinstance(self.token_count, int)
+            or isinstance(self.token_count, bool)
+            or self.token_count < 0
+        ):
+            raise ValueError("token_count must be a non-negative integer or None")
         candidates = tuple(self.candidate_order)
         if len(candidates) != 7:
             raise ValueError("candidate_order must contain exactly 7 candidates")

@@ -192,5 +192,7 @@ class LLMBallotProvider(BallotProvider):
             valid=choice is not None,
             invalid_reason=invalid_reason,
             candidate_order=candidates,
+            latency_ms=output.latency_ms,
+            token_count=output.token_count,
         )
         return BallotGeneration(ballot=ballot, evidence=evidence)

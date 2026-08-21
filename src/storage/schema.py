@@ -155,6 +155,8 @@ CREATE TABLE ballot_evidence (
     valid INTEGER NOT NULL CHECK (valid IN (0, 1)),
     invalid_reason TEXT,
     candidate_order_json TEXT NOT NULL,
+    latency_ms REAL CHECK (latency_ms IS NULL OR latency_ms >= 0),
+    token_count INTEGER CHECK (token_count IS NULL OR token_count >= 0),
     CHECK (
         (valid = 1 AND parsed_choice IS NOT NULL AND invalid_reason IS NULL)
         OR
