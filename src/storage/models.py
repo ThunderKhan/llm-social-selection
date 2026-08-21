@@ -30,3 +30,8 @@ class TrialMetadata:
     status: str
     created_at: str
     completed_at: str | None
+    condition: str | None
+    total_rounds: int | None
+    config_hash: str | None
+    profile_pool_hash: str | None
+    replacement_version: str | None

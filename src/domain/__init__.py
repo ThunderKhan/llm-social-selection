@@ -1,7 +1,15 @@
-from .records import Ballot, Response, Score, SelectionEvent, SelectionMechanism
+from .records import (
+    Ballot,
+    ReplacementEvent,
+    Response,
+    Score,
+    SelectionEvent,
+    SelectionMechanism,
+)
 
 __all__ = [
     "Ballot",
+    "ReplacementEvent",
     "Response",
     "Score",
     "SelectionEvent",

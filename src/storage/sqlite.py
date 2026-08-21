@@ -10,7 +10,14 @@ from pathlib import Path
 from typing import Any, cast
 
 from ..agents import AgentIdentity
-from ..domain import Ballot, Response, Score, SelectionEvent, SelectionMechanism
+from ..domain import (
+    Ballot,
+    ReplacementEvent,
+    Response,
+    Score,
+    SelectionEvent,
+    SelectionMechanism,
+)
 from ..population import Population
 from ..tasks import Task
 from ..tournament import RoundContext, RoundResult
@@ -86,6 +93,12 @@ class SQLiteEventStore:
     def foreign_keys_enabled(self) -> bool:
         row = self._connection.execute("PRAGMA foreign_keys").fetchone()
         return bool(row[0])
+
+    def trial_exists(self, trial_id: str) -> bool:
+        self._require_initialized()
+        return self._connection.execute(
+            "SELECT 1 FROM trials WHERE trial_id = ?", (trial_id,)
+        ).fetchone() is not None
 
     def create_experiment(
         self,
@@ -175,12 +188,42 @@ class SQLiteEventStore:
         experiment_id: str,
         trial_seed: int,
         created_at: str | None = None,
+        condition: SelectionMechanism | None = None,
+        total_rounds: int | None = None,
+        config_hash: str | None = None,
+        profile_pool_hash: str | None = None,
+        replacement_version: str | None = None,
     ) -> None:
         self._require_initialized()
         _require_non_empty(trial_id, "trial_id")
         _require_non_empty(experiment_id, "experiment_id")
         if not isinstance(trial_seed, int) or isinstance(trial_seed, bool):
             raise IntegrityError("trial_seed must be an integer")
+        protocol = (
+            condition,
+            total_rounds,
+            config_hash,
+            profile_pool_hash,
+            replacement_version,
+        )
+        if any(value is not None for value in protocol) and any(
+            value is None for value in protocol
+        ):
+            raise IntegrityError("trial protocol metadata must be provided together")
+        if condition is not None:
+            if condition not in ("peer_vote", "objective", "random"):
+                raise IntegrityError("invalid trial condition")
+            if (
+                not isinstance(total_rounds, int)
+                or isinstance(total_rounds, bool)
+                or total_rounds <= 0
+            ):
+                raise IntegrityError("total_rounds must be a positive integer")
+            if not isinstance(config_hash, str) or len(config_hash) != 64:
+                raise IntegrityError("config_hash must be a 64-character string")
+            if not isinstance(profile_pool_hash, str) or len(profile_pool_hash) != 64:
+                raise IntegrityError("profile_pool_hash must be a 64-character string")
+            _require_non_empty(cast(str, replacement_version), "replacement_version")
         timestamp = created_at or utc_now()
         _require_utc_timestamp(timestamp, "created_at")
         try:
@@ -188,10 +231,22 @@ class SQLiteEventStore:
                 self._connection.execute(
                     """
                     INSERT INTO trials (
-                        trial_id, experiment_id, trial_seed, status, created_at
-                    ) VALUES (?, ?, ?, 'created', ?)
+                        trial_id, experiment_id, trial_seed, status, created_at,
+                        condition, total_rounds, config_hash, profile_pool_hash,
+                        replacement_version
+                    ) VALUES (?, ?, ?, 'created', ?, ?, ?, ?, ?, ?)
                     """,
-                    (trial_id, experiment_id, str(trial_seed), timestamp),
+                    (
+                        trial_id,
+                        experiment_id,
+                        str(trial_seed),
+                        timestamp,
+                        condition,
+                        total_rounds,
+                        config_hash,
+                        profile_pool_hash,
+                        replacement_version,
+                    ),
                 )
         except sqlite3.IntegrityError as error:
             raise IntegrityError(f"could not create trial {trial_id}: {error}") from error
@@ -210,6 +265,11 @@ class SQLiteEventStore:
             status=row["status"],
             created_at=row["created_at"],
             completed_at=row["completed_at"],
+            condition=row["condition"],
+            total_rounds=row["total_rounds"],
+            config_hash=row["config_hash"],
+            profile_pool_hash=row["profile_pool_hash"],
+            replacement_version=row["replacement_version"],
         )
 
     def register_agents(self, trial_id: str, population: Population) -> None:
@@ -223,8 +283,9 @@ class SQLiteEventStore:
                 self._connection.executemany(
                     """
                     INSERT INTO agent_instances (
-                        trial_id, agent_id, profile_id, display_label, generation, ordinal
-                    ) VALUES (?, ?, ?, ?, ?, ?)
+                        trial_id, agent_id, profile_id, display_label, generation,
+                        ordinal, introduced_round
+                    ) VALUES (?, ?, ?, ?, ?, ?, NULL)
                     """,
                     (
                         (
@@ -266,7 +327,62 @@ class SQLiteEventStore:
             for row in rows
         )
 
-    def commit_round(self, context: RoundContext, result: RoundResult) -> None:
+    def load_initial_agents(self, trial_id: str) -> tuple[AgentIdentity, ...]:
+        self._require_initialized()
+        if self._connection.execute(
+            "SELECT 1 FROM trials WHERE trial_id = ?", (trial_id,)
+        ).fetchone() is None:
+            raise NotFoundError(f"trial not found: {trial_id}")
+        rows = self._connection.execute(
+            """
+            SELECT agent_id, profile_id, display_label, generation
+            FROM agent_instances
+            WHERE trial_id = ? AND introduced_round IS NULL
+            ORDER BY ordinal
+            """,
+            (trial_id,),
+        ).fetchall()
+        return tuple(self._agent_from_row(row) for row in rows)
+
+    def load_replacement_events(self, trial_id: str) -> tuple[ReplacementEvent, ...]:
+        self._require_initialized()
+        if self._connection.execute(
+            "SELECT 1 FROM trials WHERE trial_id = ?", (trial_id,)
+        ).fetchone() is None:
+            raise NotFoundError(f"trial not found: {trial_id}")
+        rows = self._connection.execute(
+            """
+            SELECT * FROM replacement_events
+            WHERE trial_id = ? ORDER BY round_index
+            """,
+            (trial_id,),
+        ).fetchall()
+        return tuple(
+            ReplacementEvent(
+                replacement_id=row["replacement_id"],
+                trial_id=row["trial_id"],
+                round_index=row["round_index"],
+                removed_agent_id=row["removed_agent_id"],
+                added_agent_id=row["added_agent_id"],
+                profile_id=row["profile_id"],
+                queue_index=row["queue_index"],
+                reason=row["reason"],
+            )
+            for row in rows
+        )
+
+    def active_population(self, trial_id: str) -> Population:
+        self._require_initialized()
+        return Population(self._active_agents(trial_id))
+
+    def commit_round(
+        self,
+        context: RoundContext,
+        result: RoundResult,
+        *,
+        replacement_event: ReplacementEvent | None = None,
+        replacement_agent: AgentIdentity | None = None,
+    ) -> None:
         self._require_initialized()
         try:
             with self._transaction():
@@ -283,7 +399,14 @@ class SQLiteEventStore:
                         f"incomplete round record exists: {context.trial_id}/{context.round_index}"
                     )
 
-                experiment = self._validate_round_payload(context, result)
+                trial = self._validate_round_payload(context, result)
+                self._validate_replacement_payload(
+                    context,
+                    result,
+                    trial,
+                    replacement_event,
+                    replacement_agent,
+                )
                 self._ensure_task(context.task)
                 self._connection.execute(
                     """
@@ -303,6 +426,8 @@ class SQLiteEventStore:
                 self._insert_scores(result.scores)
                 self._insert_ballots(result.ballots)
                 self._insert_selection(result.selection)
+                if replacement_event is not None and replacement_agent is not None:
+                    self._insert_replacement(replacement_event, replacement_agent)
                 committed_at = utc_now()
                 self._connection.execute(
                     """
@@ -316,12 +441,37 @@ class SQLiteEventStore:
                     "UPDATE trials SET status = 'running' WHERE trial_id = ? AND status = 'created'",
                     (context.trial_id,),
                 )
-                if experiment["provider_name"] != result.responses[0].provider_name:
-                    raise IntegrityError("experiment provider metadata changed during commit")
         except sqlite3.IntegrityError as error:
             raise IntegrityError(
                 f"could not commit round {context.trial_id}/{context.round_index}: {error}"
             ) from error
+
+    def complete_trial(self, trial_id: str) -> None:
+        self._require_initialized()
+        trial = self.get_trial(trial_id)
+        if trial.total_rounds is None:
+            raise IntegrityError(f"trial {trial_id} has no configured round count")
+        last = self.last_committed_round(trial_id)
+        if last != trial.total_rounds - 1:
+            raise IntegrityError(
+                f"trial {trial_id} cannot complete at round {last}; expected {trial.total_rounds - 1}"
+            )
+        replacement_count = len(self.load_replacement_events(trial_id))
+        if replacement_count != trial.total_rounds - 1:
+            raise IntegrityError(
+                f"trial {trial_id} has {replacement_count} replacement events; "
+                f"expected {trial.total_rounds - 1}"
+            )
+        if trial.status == "completed":
+            return
+        with self._transaction():
+            self._connection.execute(
+                """
+                UPDATE trials SET status = 'completed', completed_at = ?
+                WHERE trial_id = ?
+                """,
+                (utc_now(), trial_id),
+            )
 
     def load_round(self, trial_id: str, round_index: int) -> RoundResult:
         self._require_initialized()
@@ -456,7 +606,7 @@ class SQLiteEventStore:
     ) -> sqlite3.Row:
         trial = self._connection.execute(
             """
-            SELECT t.experiment_id, e.provider_name, e.model_name
+            SELECT t.*, e.provider_name, e.model_name
             FROM trials AS t
             JOIN experiments AS e ON e.experiment_id = t.experiment_id
             WHERE t.trial_id = ?
@@ -467,21 +617,25 @@ class SQLiteEventStore:
             raise NotFoundError(f"trial not found: {context.trial_id}")
         if trial["experiment_id"] != context.experiment_id:
             raise IntegrityError("round context experiment does not match the persisted trial")
+        if trial["status"] == "completed":
+            raise IntegrityError(f"trial is already completed: {context.trial_id}")
+        if trial["condition"] is not None and trial["condition"] != context.condition:
+            raise IntegrityError("round condition does not match the persisted trial protocol")
+        if int(trial["trial_seed"]) != context.seed:
+            raise IntegrityError("round seed does not match the persisted trial seed")
+        if (
+            trial["total_rounds"] is not None
+            and context.round_index >= trial["total_rounds"]
+        ):
+            raise IntegrityError("round index exceeds the persisted trial protocol")
         if result.trial_id != context.trial_id or result.round_index != context.round_index:
             raise IntegrityError("round result identity does not match the round context")
         if result.task != context.task:
             raise IntegrityError("round result task does not match the round context")
 
-        registered_rows = self._connection.execute(
-            """
-            SELECT agent_id, profile_id, display_label, generation
-            FROM agent_instances WHERE trial_id = ? ORDER BY ordinal
-            """,
-            (context.trial_id,),
-        ).fetchall()
         registered = tuple(
-            (row["agent_id"], row["profile_id"], row["display_label"], row["generation"])
-            for row in registered_rows
+            (agent.agent_id, agent.profile_id, agent.display_label, agent.generation)
+            for agent in self._active_agents(context.trial_id)
         )
         expected_agents = tuple(
             (agent.agent_id, agent.profile_id, agent.display_label, agent.generation)
@@ -534,6 +688,127 @@ class SQLiteEventStore:
         ):
             raise IntegrityError("selection event does not match the round context")
         return trial
+
+    def _validate_replacement_payload(
+        self,
+        context: RoundContext,
+        result: RoundResult,
+        trial: sqlite3.Row,
+        event: ReplacementEvent | None,
+        agent: AgentIdentity | None,
+    ) -> None:
+        if (event is None) != (agent is None):
+            raise IntegrityError(
+                "replacement_event and replacement_agent must be provided together"
+            )
+        total_rounds = trial["total_rounds"]
+        if total_rounds is not None:
+            replacement_required = context.round_index < total_rounds - 1
+            if replacement_required and event is None:
+                raise IntegrityError("non-final round requires a replacement event")
+            if not replacement_required and event is not None:
+                raise IntegrityError("final round must not contain a replacement event")
+        if event is None or agent is None:
+            return
+        if (
+            event.trial_id != context.trial_id
+            or event.round_index != context.round_index
+            or event.removed_agent_id != result.selection.selected_agent_id
+            or event.added_agent_id != agent.agent_id
+            or event.profile_id != agent.profile_id
+        ):
+            raise IntegrityError("replacement event does not match the round transition")
+        if event.queue_index != context.round_index:
+            raise IntegrityError("replacement queue index must match the round index")
+        if agent.generation != 0:
+            raise IntegrityError("fixed-profile replacement generation must be 0")
+        if agent.agent_id in {item.agent_id for item in self.load_agents(context.trial_id)}:
+            raise IntegrityError(f"replacement agent ID already exists: {agent.agent_id}")
+
+    def _insert_replacement(
+        self, event: ReplacementEvent, agent: AgentIdentity
+    ) -> None:
+        row = self._connection.execute(
+            "SELECT COALESCE(MAX(ordinal), -1) + 1 AS next_ordinal FROM agent_instances WHERE trial_id = ?",
+            (event.trial_id,),
+        ).fetchone()
+        self._connection.execute(
+            """
+            INSERT INTO agent_instances (
+                trial_id, agent_id, profile_id, display_label, generation,
+                ordinal, introduced_round
+            ) VALUES (?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                event.trial_id,
+                agent.agent_id,
+                agent.profile_id,
+                agent.display_label,
+                agent.generation,
+                row["next_ordinal"],
+                event.round_index,
+            ),
+        )
+        self._connection.execute(
+            """
+            INSERT INTO replacement_events (
+                replacement_id, trial_id, round_index, removed_agent_id,
+                added_agent_id, profile_id, queue_index, reason
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                event.replacement_id,
+                event.trial_id,
+                event.round_index,
+                event.removed_agent_id,
+                event.added_agent_id,
+                event.profile_id,
+                event.queue_index,
+                event.reason,
+            ),
+        )
+
+    def _active_agents(self, trial_id: str) -> tuple[AgentIdentity, ...]:
+        initial = list(self.load_initial_agents(trial_id))
+        if not initial:
+            return ()
+        agents_by_id = {
+            agent.agent_id: agent for agent in self.load_agents(trial_id)
+        }
+        for event in self.load_replacement_events(trial_id):
+            try:
+                index = next(
+                    index
+                    for index, active_agent in enumerate(initial)
+                    if active_agent.agent_id == event.removed_agent_id
+                )
+            except StopIteration as error:
+                raise IntegrityError(
+                    f"replacement event removes inactive agent: {event.removed_agent_id}"
+                ) from error
+            try:
+                added = agents_by_id[event.added_agent_id]
+            except KeyError as error:
+                raise IntegrityError(
+                    f"replacement agent record missing: {event.added_agent_id}"
+                ) from error
+            if added.profile_id != event.profile_id:
+                raise IntegrityError(
+                    f"replacement profile mismatch: {event.replacement_id}"
+                )
+            initial[index] = added
+        if len(initial) != 8 or len({agent.agent_id for agent in initial}) != 8:
+            raise IntegrityError(f"trial {trial_id} does not reconstruct to 8 active agents")
+        return tuple(initial)
+
+    @staticmethod
+    def _agent_from_row(row: sqlite3.Row) -> AgentIdentity:
+        return AgentIdentity(
+            agent_id=row["agent_id"],
+            profile_id=row["profile_id"],
+            display_label=row["display_label"],
+            generation=row["generation"],
+        )
 
     @staticmethod
     def _validate_record_agents(

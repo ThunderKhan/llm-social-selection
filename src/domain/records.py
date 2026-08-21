@@ -135,3 +135,36 @@ class SelectionEvent:
             raise ValueError(
                 "mechanism must be one of peer_vote, objective, or random"
             )
+
+
+@dataclass(frozen=True)
+class ReplacementEvent:
+    replacement_id: str
+    trial_id: str
+    round_index: int
+    removed_agent_id: str
+    added_agent_id: str
+    profile_id: str
+    queue_index: int
+    reason: Literal["fixed_profile_pool"] = "fixed_profile_pool"
+
+    def __post_init__(self) -> None:
+        for field, value in (
+            ("replacement_id", self.replacement_id),
+            ("trial_id", self.trial_id),
+            ("removed_agent_id", self.removed_agent_id),
+            ("added_agent_id", self.added_agent_id),
+            ("profile_id", self.profile_id),
+        ):
+            _require_non_empty(value, field)
+        _require_round_index(self.round_index)
+        if self.removed_agent_id == self.added_agent_id:
+            raise ValueError("replacement agent ID must differ from removed agent ID")
+        if (
+            not isinstance(self.queue_index, int)
+            or isinstance(self.queue_index, bool)
+            or self.queue_index < 0
+        ):
+            raise ValueError("queue_index must be a non-negative integer")
+        if self.reason != "fixed_profile_pool":
+            raise ValueError("reason must be fixed_profile_pool")
