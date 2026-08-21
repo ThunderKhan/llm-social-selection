@@ -1,0 +1,102 @@
+{
+  "schema_version": 1,
+  "task_set_version": "e01-validated-v1",
+  "created_for": "E01 objective-selection task calibration",
+  "scorer_version": "exact-match-v1",
+  "model_used_for_validation": "qwen3:0.6b",
+  "validation_date": "2026-08-21",
+  "status": "validated",
+  "provenance": {
+    "source": "Original deterministic items authored for this repository",
+    "license": "Project-internal; governed by the repository license",
+    "selection_policy": "Empirical difficulty bands, family-balanced ranking, and minimum-count ceiling fallback",
+    "validation_protocol": "8 neutral profiles x 2 independent seeded generations per candidate; one new 8-agent set per selected task",
+    "inference_settings": "Ollama qwen3:0.6b; temperature=0; num_predict=32; think=false"
+  },
+  "tasks": [
+    {
+      "task_id": "arith-005",
+      "family": "arithmetic",
+      "prompt": "Add 2 to 8.\n\nOUTPUT REQUIREMENT:\nReturn only the integer.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
+      "expected_answer": "10",
+      "scorer_version": "exact-match-v1"
+    },
+    {
+      "task_id": "count-002",
+      "family": "counting",
+      "prompt": "How many letters are in the word APPLE?\n\nOUTPUT REQUIREMENT:\nReturn only the integer.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
+      "expected_answer": "5",
+      "scorer_version": "exact-match-v1"
+    },
+    {
+      "task_id": "sequence-002",
+      "family": "sequence",
+      "prompt": "Complete the sequence: 0, 2, 4, 6, 8, ?\n\nOUTPUT REQUIREMENT:\nReturn only the next integer.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
+      "expected_answer": "10",
+      "scorer_version": "exact-match-v1"
+    },
+    {
+      "task_id": "string-002",
+      "family": "string",
+      "prompt": "Reverse the two-letter string AB.\n\nOUTPUT REQUIREMENT:\nReturn only the reversed string.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
+      "expected_answer": "BA",
+      "scorer_version": "exact-match-v1"
+    },
+    {
+      "task_id": "arith-002",
+      "family": "arithmetic",
+      "prompt": "Subtract 1 from 8.\n\nOUTPUT REQUIREMENT:\nReturn only the integer.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
+      "expected_answer": "7",
+      "scorer_version": "exact-match-v1"
+    },
+    {
+      "task_id": "count-003",
+      "family": "counting",
+      "prompt": "How many letters are in the word PLUM?\n\nOUTPUT REQUIREMENT:\nReturn only the integer.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
+      "expected_answer": "4",
+      "scorer_version": "exact-match-v1"
+    },
+    {
+      "task_id": "sequence-001",
+      "family": "sequence",
+      "prompt": "Complete the sequence: 2, 4, 6, 8, ?\n\nOUTPUT REQUIREMENT:\nReturn only the next integer.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
+      "expected_answer": "10",
+      "scorer_version": "exact-match-v1"
+    },
+    {
+      "task_id": "string-005",
+      "family": "string",
+      "prompt": "Reverse the two-letter string GH.\n\nOUTPUT REQUIREMENT:\nReturn only the reversed string.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
+      "expected_answer": "HG",
+      "scorer_version": "exact-match-v1"
+    },
+    {
+      "task_id": "count-005",
+      "family": "counting",
+      "prompt": "How many letters are in the word KIWI?\n\nOUTPUT REQUIREMENT:\nReturn only the integer.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
+      "expected_answer": "4",
+      "scorer_version": "exact-match-v1"
+    },
+    {
+      "task_id": "sequence-003",
+      "family": "sequence",
+      "prompt": "Complete the sequence: 4, 6, 8, ?\n\nOUTPUT REQUIREMENT:\nReturn only the next integer.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
+      "expected_answer": "10",
+      "scorer_version": "exact-match-v1"
+    },
+    {
+      "task_id": "arith-004",
+      "family": "arithmetic",
+      "prompt": "What is half of 10?\n\nOUTPUT REQUIREMENT:\nReturn only the integer.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
+      "expected_answer": "5",
+      "scorer_version": "exact-match-v1"
+    },
+    {
+      "task_id": "count-004",
+      "family": "counting",
+      "prompt": "How many letters are in the word GRAPE?\n\nOUTPUT REQUIREMENT:\nReturn only the integer.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
+      "expected_answer": "5",
+      "scorer_version": "exact-match-v1"
+    }
+  ]
+}

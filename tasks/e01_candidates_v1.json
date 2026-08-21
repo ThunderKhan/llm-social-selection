@@ -1,0 +1,263 @@
+{
+  "schema_version": 1,
+  "task_set_version": "e01-candidates-v1",
+  "created_for": "E01 objective-selection task calibration",
+  "scorer_version": "exact-match-v1",
+  "model_used_for_validation": "qwen3:0.6b",
+  "validation_date": "2026-08-21",
+  "status": "candidate",
+  "provenance": {
+    "source": "Original deterministic items authored for this repository",
+    "license": "Project-internal; governed by the repository license",
+    "selection_policy": "Empirical difficulty bands, family-balanced ranking, and minimum-count ceiling fallback",
+    "validation_protocol": "8 neutral profiles x 2 independent seeded generations per candidate; one new 8-agent set per selected task",
+    "inference_settings": "Ollama qwen3:0.6b; temperature=0; num_predict=32; think=false"
+  },
+  "tasks": [
+    {
+      "task_id": "arith-001",
+      "family": "arithmetic",
+      "prompt": "Subtract 2 from 8.\n\nOUTPUT REQUIREMENT:\nReturn only the integer.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
+      "expected_answer": "6",
+      "scorer_version": "exact-match-v1"
+    },
+    {
+      "task_id": "arith-002",
+      "family": "arithmetic",
+      "prompt": "Subtract 1 from 8.\n\nOUTPUT REQUIREMENT:\nReturn only the integer.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
+      "expected_answer": "7",
+      "scorer_version": "exact-match-v1"
+    },
+    {
+      "task_id": "arith-003",
+      "family": "arithmetic",
+      "prompt": "Subtract 3 from 8.\n\nOUTPUT REQUIREMENT:\nReturn only the integer.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
+      "expected_answer": "5",
+      "scorer_version": "exact-match-v1"
+    },
+    {
+      "task_id": "arith-004",
+      "family": "arithmetic",
+      "prompt": "What is half of 10?\n\nOUTPUT REQUIREMENT:\nReturn only the integer.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
+      "expected_answer": "5",
+      "scorer_version": "exact-match-v1"
+    },
+    {
+      "task_id": "arith-005",
+      "family": "arithmetic",
+      "prompt": "Add 2 to 8.\n\nOUTPUT REQUIREMENT:\nReturn only the integer.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
+      "expected_answer": "10",
+      "scorer_version": "exact-match-v1"
+    },
+    {
+      "task_id": "mcq-001",
+      "family": "multiple-choice",
+      "prompt": "Which number is prime?\nA. 21\nB. 29\nC. 33\nD. 35\n\nOUTPUT REQUIREMENT:\nReturn only one uppercase letter: A, B, C, or D.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
+      "expected_answer": "B",
+      "scorer_version": "exact-match-v1"
+    },
+    {
+      "task_id": "mcq-002",
+      "family": "multiple-choice",
+      "prompt": "Which fraction equals 0.75?\nA. 1/2\nB. 2/3\nC. 3/4\nD. 4/5\n\nOUTPUT REQUIREMENT:\nReturn only one uppercase letter: A, B, C, or D.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
+      "expected_answer": "C",
+      "scorer_version": "exact-match-v1"
+    },
+    {
+      "task_id": "mcq-003",
+      "family": "multiple-choice",
+      "prompt": "Which number is a perfect square?\nA. 18\nB. 27\nC. 32\nD. 49\n\nOUTPUT REQUIREMENT:\nReturn only one uppercase letter: A, B, C, or D.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
+      "expected_answer": "D",
+      "scorer_version": "exact-match-v1"
+    },
+    {
+      "task_id": "mcq-004",
+      "family": "multiple-choice",
+      "prompt": "Which number is divisible by both 3 and 4?\nA. 18\nB. 20\nC. 24\nD. 30\n\nOUTPUT REQUIREMENT:\nReturn only one uppercase letter: A, B, C, or D.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
+      "expected_answer": "C",
+      "scorer_version": "exact-match-v1"
+    },
+    {
+      "task_id": "mcq-005",
+      "family": "multiple-choice",
+      "prompt": "Which binary numeral represents decimal 5?\nA. 100\nB. 101\nC. 110\nD. 111\n\nOUTPUT REQUIREMENT:\nReturn only one uppercase letter: A, B, C, or D.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
+      "expected_answer": "B",
+      "scorer_version": "exact-match-v1"
+    },
+    {
+      "task_id": "logic-001",
+      "family": "logic",
+      "prompt": "P is true. Q is false. Evaluate P AND Q.\n\nOUTPUT REQUIREMENT:\nReturn only the lowercase truth value true or false.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
+      "expected_answer": "false",
+      "scorer_version": "exact-match-v1"
+    },
+    {
+      "task_id": "logic-002",
+      "family": "logic",
+      "prompt": "P is true. Q is false. Evaluate P OR Q.\n\nOUTPUT REQUIREMENT:\nReturn only the lowercase truth value true or false.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
+      "expected_answer": "true",
+      "scorer_version": "exact-match-v1"
+    },
+    {
+      "task_id": "logic-003",
+      "family": "logic",
+      "prompt": "P is true. Q is false. Evaluate NOT (P AND Q).\n\nOUTPUT REQUIREMENT:\nReturn only the lowercase truth value true or false.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
+      "expected_answer": "true",
+      "scorer_version": "exact-match-v1"
+    },
+    {
+      "task_id": "logic-004",
+      "family": "logic",
+      "prompt": "P is false. Q is false. Evaluate P OR Q.\n\nOUTPUT REQUIREMENT:\nReturn only the lowercase truth value true or false.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
+      "expected_answer": "false",
+      "scorer_version": "exact-match-v1"
+    },
+    {
+      "task_id": "logic-005",
+      "family": "logic",
+      "prompt": "P is false. Q is true. Evaluate (NOT P) AND Q.\n\nOUTPUT REQUIREMENT:\nReturn only the lowercase truth value true or false.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
+      "expected_answer": "true",
+      "scorer_version": "exact-match-v1"
+    },
+    {
+      "task_id": "string-001",
+      "family": "string",
+      "prompt": "Reverse the two-letter string CD.\n\nOUTPUT REQUIREMENT:\nReturn only the reversed string.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
+      "expected_answer": "DC",
+      "scorer_version": "exact-match-v1"
+    },
+    {
+      "task_id": "string-002",
+      "family": "string",
+      "prompt": "Reverse the two-letter string AB.\n\nOUTPUT REQUIREMENT:\nReturn only the reversed string.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
+      "expected_answer": "BA",
+      "scorer_version": "exact-match-v1"
+    },
+    {
+      "task_id": "string-003",
+      "family": "string",
+      "prompt": "Reverse the two-letter string EF.\n\nOUTPUT REQUIREMENT:\nReturn only the reversed string.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
+      "expected_answer": "FE",
+      "scorer_version": "exact-match-v1"
+    },
+    {
+      "task_id": "string-004",
+      "family": "string",
+      "prompt": "Concatenate RAIN followed immediately by BOW.\n\nOUTPUT REQUIREMENT:\nReturn only the combined string.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
+      "expected_answer": "RAINBOW",
+      "scorer_version": "exact-match-v1"
+    },
+    {
+      "task_id": "string-005",
+      "family": "string",
+      "prompt": "Reverse the two-letter string GH.\n\nOUTPUT REQUIREMENT:\nReturn only the reversed string.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
+      "expected_answer": "HG",
+      "scorer_version": "exact-match-v1"
+    },
+    {
+      "task_id": "count-001",
+      "family": "counting",
+      "prompt": "How many letters are in the word WOLF?\n\nOUTPUT REQUIREMENT:\nReturn only the integer.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
+      "expected_answer": "4",
+      "scorer_version": "exact-match-v1"
+    },
+    {
+      "task_id": "count-002",
+      "family": "counting",
+      "prompt": "How many letters are in the word APPLE?\n\nOUTPUT REQUIREMENT:\nReturn only the integer.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
+      "expected_answer": "5",
+      "scorer_version": "exact-match-v1"
+    },
+    {
+      "task_id": "count-003",
+      "family": "counting",
+      "prompt": "How many letters are in the word PLUM?\n\nOUTPUT REQUIREMENT:\nReturn only the integer.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
+      "expected_answer": "4",
+      "scorer_version": "exact-match-v1"
+    },
+    {
+      "task_id": "count-004",
+      "family": "counting",
+      "prompt": "How many letters are in the word GRAPE?\n\nOUTPUT REQUIREMENT:\nReturn only the integer.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
+      "expected_answer": "5",
+      "scorer_version": "exact-match-v1"
+    },
+    {
+      "task_id": "count-005",
+      "family": "counting",
+      "prompt": "How many letters are in the word KIWI?\n\nOUTPUT REQUIREMENT:\nReturn only the integer.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
+      "expected_answer": "4",
+      "scorer_version": "exact-match-v1"
+    },
+    {
+      "task_id": "sequence-001",
+      "family": "sequence",
+      "prompt": "Complete the sequence: 2, 4, 6, 8, ?\n\nOUTPUT REQUIREMENT:\nReturn only the next integer.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
+      "expected_answer": "10",
+      "scorer_version": "exact-match-v1"
+    },
+    {
+      "task_id": "sequence-002",
+      "family": "sequence",
+      "prompt": "Complete the sequence: 0, 2, 4, 6, 8, ?\n\nOUTPUT REQUIREMENT:\nReturn only the next integer.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
+      "expected_answer": "10",
+      "scorer_version": "exact-match-v1"
+    },
+    {
+      "task_id": "sequence-003",
+      "family": "sequence",
+      "prompt": "Complete the sequence: 4, 6, 8, ?\n\nOUTPUT REQUIREMENT:\nReturn only the next integer.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
+      "expected_answer": "10",
+      "scorer_version": "exact-match-v1"
+    },
+    {
+      "task_id": "sequence-004",
+      "family": "sequence",
+      "prompt": "Complete the sequence: 6, 8, ?\n\nOUTPUT REQUIREMENT:\nReturn only the next integer.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
+      "expected_answer": "10",
+      "scorer_version": "exact-match-v1"
+    },
+    {
+      "task_id": "sequence-005",
+      "family": "sequence",
+      "prompt": "Complete the sequence: -2, 0, 2, 4, 6, 8, ?\n\nOUTPUT REQUIREMENT:\nReturn only the next integer.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
+      "expected_answer": "10",
+      "scorer_version": "exact-match-v1"
+    },
+    {
+      "task_id": "symbolic-001",
+      "family": "symbolic",
+      "prompt": "Let x = 8. Calculate x + 1.\n\nOUTPUT REQUIREMENT:\nReturn only the integer.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
+      "expected_answer": "9",
+      "scorer_version": "exact-match-v1"
+    },
+    {
+      "task_id": "symbolic-002",
+      "family": "symbolic",
+      "prompt": "Let x = 8. Calculate x - 1.\n\nOUTPUT REQUIREMENT:\nReturn only the integer.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
+      "expected_answer": "7",
+      "scorer_version": "exact-match-v1"
+    },
+    {
+      "task_id": "symbolic-003",
+      "family": "symbolic",
+      "prompt": "Let x = 4. Calculate 2*x.\n\nOUTPUT REQUIREMENT:\nReturn only the integer.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
+      "expected_answer": "8",
+      "scorer_version": "exact-match-v1"
+    },
+    {
+      "task_id": "symbolic-004",
+      "family": "symbolic",
+      "prompt": "Let x = 10. Calculate x/2.\n\nOUTPUT REQUIREMENT:\nReturn only the integer.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
+      "expected_answer": "5",
+      "scorer_version": "exact-match-v1"
+    },
+    {
+      "task_id": "symbolic-005",
+      "family": "symbolic",
+      "prompt": "Let x = 8. Calculate x + 2.\n\nOUTPUT REQUIREMENT:\nReturn only the integer.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
+      "expected_answer": "10",
+      "scorer_version": "exact-match-v1"
+    }
+  ]
+}
