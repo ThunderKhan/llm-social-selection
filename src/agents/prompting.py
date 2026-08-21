@@ -18,5 +18,9 @@ def render_prompt(profile: PromptProfile, task: Task) -> str:
         f"Template version: {profile.template_version}\n"
         f"Parameters: {parameters}\n\n"
         "TASK:\n"
-        f"{task.prompt}"
+        f"{task.prompt}\n\n"
+        "OUTPUT CONTRACT:\n"
+        "Return only the requested answer. Do not repeat the task. "
+        "Do not include explanations, reasoning, Markdown, units, or labels such as "
+        "'Answer:' unless the task explicitly requests them."
     )

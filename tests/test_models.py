@@ -53,6 +53,27 @@ def test_mock_output_is_deterministic(
     assert first.content.startswith("MOCK_RESPONSE:")
 
 
+def test_mock_output_is_unchanged_by_optional_response_schema(
+    agent: AgentIdentity, task: Task
+) -> None:
+    provider = MockModelProvider()
+    arguments = {
+        "agent": agent,
+        "task": task,
+        "prompt": "Effective prompt",
+        "request_id": "request-008",
+        "seed": 42,
+    }
+
+    plain = provider.generate(**arguments)
+    structured = provider.generate(
+        **arguments,
+        response_schema={"type": "object", "additionalProperties": False},
+    )
+
+    assert structured == plain
+
+
 def test_different_agent_changes_mock_output(task: Task) -> None:
     provider = MockModelProvider()
     first_agent = AgentIdentity("agent-001", "profile-001", "Participant 1", 0)
@@ -122,6 +143,17 @@ def test_prompt_rendering_is_stable_across_parameter_order(
     second = PromptProfile("profile-003", {"setting_b": 0.5, "setting_a": 2}, "v1")
 
     assert render_prompt(first, task) == render_prompt(second, task)
+
+
+def test_prompt_rendering_enforces_concise_output_contract(
+    profile: PromptProfile, task: Task
+) -> None:
+    prompt = render_prompt(profile, task)
+
+    assert "Do not repeat the task" in prompt
+    assert "Do not include explanations, reasoning, Markdown, units" in prompt
+    assert "labels such as 'Answer:'" in prompt
+    assert "unless the task explicitly requests them" in prompt
 
 
 def test_agent_response_flow_preserves_references_and_metadata(

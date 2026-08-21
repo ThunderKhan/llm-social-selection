@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import socket
+from collections.abc import Mapping
 from math import isfinite
 from typing import TYPE_CHECKING, Any, Protocol
 from urllib.error import HTTPError, URLError
@@ -95,6 +96,7 @@ class OllamaProvider(ModelProvider):
         prompt: str,
         request_id: str,
         seed: int | None = None,
+        response_schema: Mapping[str, Any] | None = None,
     ) -> ModelOutput:
         del agent, task
         _require_non_empty(prompt, "prompt")
@@ -110,16 +112,19 @@ class OllamaProvider(ModelProvider):
         }
         if effective_seed is not None:
             options["seed"] = effective_seed
+        payload: dict[str, Any] = {
+            "model": self.model_name,
+            "prompt": prompt,
+            "stream": False,
+            "think": False,
+            "options": options,
+        }
+        if response_schema is not None:
+            payload["format"] = dict(response_schema)
         data = self._request_json(
             "/api/generate",
             method="POST",
-            payload={
-                "model": self.model_name,
-                "prompt": prompt,
-                "stream": False,
-                "think": False,
-                "options": options,
-            },
+            payload=payload,
         )
         content = data.get("response")
         if not isinstance(content, str):

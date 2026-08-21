@@ -4,6 +4,7 @@ from .llm import (
     BallotParseError,
     LLMBallotProvider,
     anonymous_candidates,
+    ballot_response_schema,
     parse_ballot_choice,
     render_ballot_prompt,
 )
@@ -15,6 +16,7 @@ __all__ = [
     "DeterministicBallotProvider",
     "LLMBallotProvider",
     "anonymous_candidates",
+    "ballot_response_schema",
     "parse_ballot_choice",
     "render_ballot_prompt",
 ]

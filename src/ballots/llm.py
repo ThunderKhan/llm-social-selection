@@ -81,12 +81,21 @@ def render_ballot_prompt(
             "",
             "Support the ONE response that best answers the task.",
             "Evaluate only the response content. Do not infer authorship or identity.",
-            "Return ONLY a JSON object with exactly one key using this schema:",
-            '{"choice":"A"}',
+            "Return ONLY a JSON object with exactly one key named choice.",
+            "The choice value must be one of the displayed response labels.",
             "Do not use Markdown, code fences, explanation, or any other text.",
         )
     )
     return "\n".join(sections)
+
+
+def ballot_response_schema(labels: Sequence[str]) -> dict[str, Any]:
+    return {
+        "type": "object",
+        "properties": {"choice": {"type": "string", "enum": list(labels)}},
+        "required": ["choice"],
+        "additionalProperties": False,
+    }
 
 
 def parse_ballot_choice(raw_output: str, eligible_labels: set[str]) -> str:
@@ -157,6 +166,9 @@ class LLMBallotProvider(BallotProvider):
             prompt=prompt,
             request_id=request_id,
             seed=request_seed,
+            response_schema=ballot_response_schema(
+                tuple(candidate.label for candidate in candidates)
+            ),
         )
         labels = {candidate.label for candidate in candidates}
         choice: str | None = None

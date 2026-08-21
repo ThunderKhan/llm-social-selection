@@ -5,9 +5,11 @@ import hashlib
 import json
 import sys
 from collections import Counter
+from collections.abc import Mapping
 from datetime import datetime, timezone
 from pathlib import Path
 from time import perf_counter
+from typing import Any
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -19,6 +21,7 @@ from src.ballots import (  # noqa: E402
     BallotParseError,
     LLMBallotProvider,
     anonymous_candidates,
+    ballot_response_schema,
     parse_ballot_choice,
     render_ballot_prompt,
 )
@@ -48,6 +51,7 @@ class CountingProvider(ModelProvider):
         self.provider = provider
         self.requests = Counter[str]()
         self.failures = Counter[str]()
+        self.structured_requests = Counter[str]()
 
     @property
     def provider_name(self) -> str:
@@ -65,6 +69,7 @@ class CountingProvider(ModelProvider):
         prompt: str,
         request_id: str,
         seed: int | None = None,
+        response_schema: Mapping[str, Any] | None = None,
     ) -> ModelOutput:
         kind = (
             "ballot"
@@ -72,6 +77,8 @@ class CountingProvider(ModelProvider):
             else "response"
         )
         self.requests[kind] += 1
+        if response_schema is not None:
+            self.structured_requests[kind] += 1
         try:
             return self.provider.generate(
                 agent=agent,
@@ -79,6 +86,7 @@ class CountingProvider(ModelProvider):
                 prompt=prompt,
                 request_id=request_id,
                 seed=seed,
+                response_schema=response_schema,
             )
         except OllamaTimeoutError:
             self.failures[f"{kind}_timeout"] += 1
@@ -104,22 +112,22 @@ def diagnostic_tasks() -> tuple[Task, ...]:
         Task(
             "m2-diagnostic-arithmetic-1",
             "arithmetic",
-            "Return only the final answer, with no explanation: 2 + 2",
-            "4",
-            "exact-match-v1",
-        ),
-        Task(
-            "m2-diagnostic-arithmetic-2",
-            "arithmetic",
-            "Return only the final answer, with no explanation: 10 - 3",
-            "7",
+            "What is 9 + 6? Return only the integer.",
+            "15",
             "exact-match-v1",
         ),
         Task(
             "m2-diagnostic-format-1",
             "format",
-            "Return only the uppercase word YES, with no punctuation or explanation.",
-            "YES",
+            "Return only the uppercase word ORANGE.",
+            "ORANGE",
+            "exact-match-v1",
+        ),
+        Task(
+            "m2-diagnostic-sequence-1",
+            "sequence",
+            "What lowercase letter comes immediately after c? Return only that letter.",
+            "d",
             "exact-match-v1",
         ),
     )
@@ -202,6 +210,9 @@ def run_repeat_display_probe(
                 prompt=prompt,
                 request_id=f"control-display-{index:03d}",
                 seed=4242,
+                response_schema=ballot_response_schema(
+                    tuple(candidate.label for candidate in candidates)
+                ),
             )
         except ModelProviderError:
             continue
@@ -233,7 +244,10 @@ def run_repeat_display_probe(
                 token_count=output.token_count,
             )
         )
-    return analyze_repeat_display(evidence_rows), evidence_rows
+    analysis = analyze_repeat_display(evidence_rows)
+    analysis["attempts"] = repeats
+    analysis["provider_failures"] = repeats - len(evidence_rows)
+    return analysis, evidence_rows
 
 
 def run_nondeterminism_probe(
@@ -280,6 +294,9 @@ def run_nondeterminism_probe(
                     prompt=ballot_prompt,
                     request_id="fixed-ballot-repeatability",
                     seed=42,
+                    response_schema=ballot_response_schema(
+                        tuple(candidate.label for candidate in candidates)
+                    ),
                 ).content
             )
         except ModelProviderError:
@@ -304,7 +321,7 @@ def main() -> int:
     parser.add_argument("--model", default="qwen3:0.6b")
     parser.add_argument("--base-url", default="http://127.0.0.1:11434")
     parser.add_argument("--timeout-seconds", type=float, default=120.0)
-    parser.add_argument("--repeat-displays", type=int, default=10)
+    parser.add_argument("--repeat-displays", type=int, default=14)
     parser.add_argument("--repeatability", type=int, default=5)
     parser.add_argument(
         "--output-dir", type=Path, default=ROOT / "experiments" / "diagnostics"
@@ -312,8 +329,10 @@ def main() -> int:
     args = parser.parse_args()
     if args.trials <= 0 or args.rounds <= 0:
         parser.error("--trials and --rounds must be positive")
-    if args.repeat_displays <= 0 or args.repeatability <= 0:
-        parser.error("probe repeat counts must be positive")
+    if args.repeat_displays < 14:
+        parser.error("--repeat-displays must be at least 14")
+    if args.repeatability <= 0:
+        parser.error("--repeatability must be positive")
 
     started = perf_counter()
     provider = OllamaProvider(
@@ -345,6 +364,7 @@ def main() -> int:
                 "candidate_order": "voter-seeded-v1",
                 "invalid_policy": "abstain",
                 "output_format": "json-choice-v1",
+                "structured_output": "ollama-json-schema-v1",
                 "provider": "llm",
             },
             "condition": "random",
@@ -437,6 +457,7 @@ def main() -> int:
         persistence_mismatches=persistence_mismatches,
         provider_failures=provider_failures,
         provider_requests=provider_requests,
+        repeat_display=repeat_display,
     )
     duration = perf_counter() - started
     report = {
@@ -457,6 +478,13 @@ def main() -> int:
         "identity_audit": identity_audit,
         "persistence": {"mismatches": persistence_mismatches},
         "repeat_display": repeat_display,
+        "structured_output": {
+            "mode": "ollama-json-schema-v1",
+            "ballot_requests": counted.structured_requests["ballot"],
+            "all_requests": dict(sorted(counted.structured_requests.items())),
+            "main_strict_valid": summary["ballots"]["valid"],
+            "main_attempts": summary["ballots"]["attempts"],
+        },
         "repeat_display_evidence": [
             {
                 "raw_output": item.raw_output,
@@ -502,6 +530,11 @@ def main() -> int:
         f"(tie-aware chance={summary['objective_agreement']['mean_tie_aware_chance_baseline']})"
     )
     print(f"Position support: {summary['positions']['supported_counts']}")
+    print(
+        "Content/position concentration: "
+        f"content={summary['content_vs_position']['max_supported_content_share']}, "
+        f"position={summary['positions']['max_supported_position_share']}"
+    )
     print(f"Identity leakage audit: {identity_audit['passed']}")
     print(f"Candidate mapping audit: {summary['candidate_mapping']['valid']}")
     print(f"Persistence mismatches: {persistence_mismatches}")

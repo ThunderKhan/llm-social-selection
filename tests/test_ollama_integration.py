@@ -122,6 +122,7 @@ def test_local_qwen_generates_one_anonymous_ballot() -> None:
 
     assert generated.evidence is not None
     assert generated.evidence.raw_output.strip()
+    assert generated.evidence.valid is True
     assert len(generated.evidence.candidate_order) == 7
     assert population.agents[0].agent_id not in {
         candidate.agent_id for candidate in generated.evidence.candidate_order
@@ -153,4 +154,5 @@ def test_local_qwen_completes_real_response_and_ballot_round() -> None:
     assert len(result.ballots) == 8
     assert len(result.ballot_evidence) == 8
     assert all(evidence.raw_output.strip() for evidence in result.ballot_evidence)
+    assert all(evidence.valid for evidence in result.ballot_evidence)
     assert result.selection.mechanism == "peer_vote"

@@ -145,12 +145,14 @@ def test_analyze_rounds_computes_compliance_exposure_and_agreement() -> None:
     assert summary["ballots"]["invalid_reasons"] == {"invalid_json": 1}
     assert summary["objective_agreement"]["supported_best_score"] == 7
     assert summary["positions"]["supported_counts"]["A"] == 7
+    assert summary["positions"]["max_supported_position_share"] == 1.0
     assert set(summary["positions"]["exposure_counts"].values()) == {8}
     assert summary["lengths"]["supported"]["count"] == 7
     assert summary["lengths"]["candidate"]["count"] == 56
     assert summary["runtime"]["response_latency_ms"]["count"] == 8
     assert summary["runtime"]["ballot_latency_ms"]["count"] == 8
     assert summary["candidate_mapping"]["valid"] is True
+    assert summary["content_vs_position"]["unique_supported_contents"] > 0
 
 
 def test_candidate_mapping_audit_detects_unknown_candidate() -> None:
@@ -207,6 +209,8 @@ def test_repeat_display_analysis_tracks_internal_choice_not_label() -> None:
     assert result["valid"] == 3
     assert result["unique_supported_responses"] == 1
     assert result["choice_consistency"] == 1.0
+    assert result["response_consistency"] == 1.0
+    assert result["max_selected_position_share"] == 1 / 3
     assert result["selected_position_counts"] == {
         "A": 1,
         "B": 0,
@@ -227,12 +231,14 @@ def test_sanity_gates_apply_explicit_failure_rules() -> None:
         label: count / 8
         for label, count in ready_summary["positions"]["supported_counts"].items()
     }
+    ready_summary["positions"]["max_supported_position_share"] = 0.25
     ready = evaluate_sanity_gates(
         ready_summary,
         identity_audit={"passed": True},
         persistence_mismatches=0,
         provider_failures=0,
         provider_requests=100,
+        repeat_display={"valid": 14, "attempts": 14},
     )
     revise = evaluate_sanity_gates(
         analyze_rounds((diagnostic_round(invalid_count=2),)),
@@ -240,11 +246,76 @@ def test_sanity_gates_apply_explicit_failure_rules() -> None:
         persistence_mismatches=1,
         provider_failures=6,
         provider_requests=100,
+        repeat_display={"valid": 13, "attempts": 14},
     )
 
     assert ready["recommendation"] == "READY FOR E01"
     assert revise["recommendation"] == "REVISE BEFORE E01"
-    assert len(revise["failures"]) == 4
+    assert "ballot validity is below 95%" in revise["failures"]
+    assert "controlled reorder ballot validity is below 90%" not in revise["failures"]
+
+
+def test_position_concentration_gate_uses_engineering_boundaries() -> None:
+    summary = analyze_rounds((diagnostic_round(),))
+    common = {
+        "identity_audit": {"passed": True},
+        "persistence_mismatches": 0,
+        "provider_failures": 0,
+        "provider_requests": 100,
+        "repeat_display": {"valid": 14, "attempts": 14},
+    }
+
+    summary["positions"]["max_supported_position_share"] = 0.59
+    passed = evaluate_sanity_gates(summary, **common)
+    summary["positions"]["max_supported_position_share"] = 0.60
+    warned = evaluate_sanity_gates(summary, **common)
+    summary["positions"]["max_supported_position_share"] = 0.80
+    failed = evaluate_sanity_gates(summary, **common)
+
+    assert passed["recommendation"] == "READY FOR E01"
+    assert not any("position" in warning for warning in passed["warnings"])
+    assert warned["recommendation"] == "READY FOR E01"
+    assert any("60% to 80%" in warning for warning in warned["warnings"])
+    assert failed["recommendation"] == "REVISE BEFORE E01"
+    assert any("80%" in reason for reason in failed["failures"])
+
+
+def test_controlled_reorder_validity_below_ninety_percent_fails() -> None:
+    summary = analyze_rounds((diagnostic_round(),))
+    summary["positions"]["max_supported_position_share"] = 0.20
+
+    gates = evaluate_sanity_gates(
+        summary,
+        identity_audit={"passed": True},
+        persistence_mismatches=0,
+        provider_failures=0,
+        provider_requests=100,
+        repeat_display={"valid": 12, "attempts": 14},
+    )
+
+    assert gates["recommendation"] == "REVISE BEFORE E01"
+    assert "controlled reorder ballot validity is below 90%" in gates["failures"]
+
+
+def test_controlled_reorder_position_concentration_uses_same_gate() -> None:
+    summary = analyze_rounds((diagnostic_round(),))
+    summary["positions"]["max_supported_position_share"] = 0.20
+
+    gates = evaluate_sanity_gates(
+        summary,
+        identity_audit={"passed": True},
+        persistence_mismatches=0,
+        provider_failures=0,
+        provider_requests=100,
+        repeat_display={
+            "valid": 14,
+            "attempts": 14,
+            "max_selected_position_share": 0.80,
+        },
+    )
+
+    assert gates["recommendation"] == "REVISE BEFORE E01"
+    assert any("80%" in reason for reason in gates["failures"])
 
 
 def test_markdown_report_contains_diagnostic_sections() -> None:
@@ -255,13 +326,20 @@ def test_markdown_report_contains_diagnostic_sections() -> None:
         persistence_mismatches=0,
         provider_failures=0,
         provider_requests=16,
+        repeat_display={"valid": 8, "attempts": 8},
     )
     report = {
         "run": {"model": "qwen3:0.6b", "trials": 1, "rounds_per_trial": 1},
         "summary": summary,
         "identity_audit": {"passed": True},
         "persistence": {"mismatches": 0},
-        "repeat_display": {"choice_consistency": 1.0},
+        "repeat_display": {
+            "attempts": 8,
+            "valid": 8,
+            "choice_consistency": 1.0,
+            "max_selected_position_share": 0.25,
+        },
+        "structured_output": {"ballot_requests": 8},
         "nondeterminism": {
             "response_unique_outputs": 1,
             "ballot_unique_outputs": 1,

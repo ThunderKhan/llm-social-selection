@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import hashlib
 import json
+from collections.abc import Mapping
 from typing import TYPE_CHECKING
+from typing import Any
 
 from .base import ModelOutput, ModelProvider, _require_non_empty
 
@@ -28,7 +30,9 @@ class MockModelProvider(ModelProvider):
         prompt: str,
         request_id: str,
         seed: int | None = None,
+        response_schema: Mapping[str, Any] | None = None,
     ) -> ModelOutput:
+        del response_schema
         _require_non_empty(prompt, "prompt")
         _require_non_empty(request_id, "request_id")
         if seed is not None and (

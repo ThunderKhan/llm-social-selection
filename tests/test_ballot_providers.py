@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+from collections.abc import Mapping
 from hashlib import sha256
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -10,6 +12,7 @@ from src.ballots import (
     BallotParseError,
     LLMBallotProvider,
     anonymous_candidates,
+    ballot_response_schema,
     parse_ballot_choice,
     render_ballot_prompt,
 )
@@ -25,6 +28,7 @@ class BallotAwareProvider(ModelProvider):
     def __init__(self, ballot_output: str = '{"choice":"A"}') -> None:
         self.ballot_output = ballot_output
         self.prompts: list[str] = []
+        self.response_schemas: list[Mapping[str, Any] | None] = []
 
     @property
     def provider_name(self) -> str:
@@ -42,9 +46,11 @@ class BallotAwareProvider(ModelProvider):
         prompt: str,
         request_id: str,
         seed: int | None = None,
+        response_schema: Mapping[str, Any] | None = None,
     ) -> ModelOutput:
         del agent, task
         self.prompts.append(prompt)
+        self.response_schemas.append(response_schema)
         content = (
             self.ballot_output
             if prompt.startswith("ANONYMOUS RESPONSE EVALUATION")
@@ -163,11 +169,25 @@ def test_rendered_prompt_contains_no_identity_metadata(
     prompt = render_ballot_prompt(round_task, candidates, responses)
 
     assert "Response A:" in prompt
-    assert '{"choice":"A"}' in prompt
+    assert 'one key named choice' in prompt
+    assert not any(f'{{"choice":"{label}"}}' in prompt for label in "ABCDEFG")
     for agent in population.agents:
         assert agent.agent_id not in prompt
         assert agent.profile_id not in prompt
         assert agent.display_label not in prompt
+
+
+def test_ballot_schema_allows_exactly_the_displayed_labels() -> None:
+    schema = ballot_response_schema(("Q", "R", "S"))
+
+    assert schema == {
+        "type": "object",
+        "properties": {
+            "choice": {"type": "string", "enum": ["Q", "R", "S"]}
+        },
+        "required": ["choice"],
+        "additionalProperties": False,
+    }
 
 
 def test_strict_parser_accepts_only_exact_choice_object() -> None:
@@ -217,6 +237,7 @@ def test_llm_ballot_preserves_mapping_and_provider_metadata(
     assert generated.evidence.raw_output == '{"choice":"C"}'
     assert generated.evidence.provider_name == "test-provider"
     assert generated.evidence.model_name == "test-model"
+    assert provider.response_schemas == [ballot_response_schema(tuple("ABCDEFG"))]
     assert generated.ballot.supported_agent_id == generated.evidence.candidate_order[2].agent_id
     assert generated.ballot.supported_agent_id != voter.agent_id
 

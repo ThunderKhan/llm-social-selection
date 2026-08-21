@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from collections.abc import Mapping
 from dataclasses import dataclass
 from math import isfinite
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from ..agents.models import AgentIdentity
@@ -72,5 +73,6 @@ class ModelProvider(ABC):
         prompt: str,
         request_id: str,
         seed: int | None = None,
+        response_schema: Mapping[str, Any] | None = None,
     ) -> ModelOutput:
         """Generate model output for one explicit request."""

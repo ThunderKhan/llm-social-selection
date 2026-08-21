@@ -42,6 +42,7 @@ def analyze_rounds(rounds: Sequence[RoundResult]) -> dict[str, Any]:
     chance_baselines: list[float] = []
     position_choices: Counter[str] = Counter()
     position_exposure: Counter[str] = Counter()
+    supported_contents: Counter[str] = Counter()
     candidate_positions: dict[str, Counter[str]] = defaultdict(Counter)
     candidate_lengths: list[int] = []
     supported_lengths: list[int] = []
@@ -127,6 +128,7 @@ def analyze_rounds(rounds: Sequence[RoundResult]) -> dict[str, Any]:
             position_choices[choice] += 1
             chosen = candidate_by_label[choice]
             chosen_response = response_by_id[chosen.response_id]
+            supported_contents[" ".join(chosen_response.content.split())] += 1
             chosen_length = len(chosen_response.content)
             supported_lengths.append(chosen_length)
             supported_length_ranks.append(
@@ -191,6 +193,11 @@ def analyze_rounds(rounds: Sequence[RoundResult]) -> dict[str, Any]:
                 label: _rate(position_choices[label], ballot_valid)
                 for label in LABELS
             },
+            "max_supported_position_share": (
+                max(position_choices.values()) / ballot_valid
+                if ballot_valid and position_choices
+                else None
+            ),
             "exposure_counts": {
                 label: position_exposure[label] for label in LABELS
             },
@@ -206,6 +213,22 @@ def analyze_rounds(rounds: Sequence[RoundResult]) -> dict[str, Any]:
             "supported_length_rank": _numeric_summary(supported_length_ranks),
             "correct_responses": _numeric_summary(correct_lengths),
             "incorrect_responses": _numeric_summary(incorrect_lengths),
+        },
+        "content_vs_position": {
+            "supported_content_counts": dict(
+                sorted(supported_contents.items(), key=lambda item: (-item[1], item[0]))
+            ),
+            "unique_supported_contents": len(supported_contents),
+            "max_supported_content_share": (
+                max(supported_contents.values()) / ballot_valid
+                if ballot_valid and supported_contents
+                else None
+            ),
+            "max_supported_position_share": (
+                max(position_choices.values()) / ballot_valid
+                if ballot_valid and position_choices
+                else None
+            ),
         },
         "runtime": {
             "response_latency_ms": _numeric_summary(response_latencies),
@@ -269,12 +292,15 @@ def analyze_repeat_display(evidence: Sequence[BallotEvidence]) -> dict[str, Any]
         selected_positions[item.parsed_choice] += 1
     valid = sum(supported_agents.values())
     dominant_count = max(supported_agents.values(), default=0)
+    dominant_position_count = max(selected_positions.values(), default=0)
     return {
         "attempts": len(evidence),
         "valid": valid,
         "invalid_reasons": dict(sorted(invalid_reasons.items())),
         "unique_supported_responses": len(supported_agents),
         "choice_consistency": _rate(dominant_count, valid),
+        "response_consistency": _rate(dominant_count, valid),
+        "max_selected_position_share": _rate(dominant_position_count, valid),
         "supported_agent_counts": dict(sorted(supported_agents.items())),
         "selected_position_counts": {
             label: selected_positions[label] for label in LABELS
@@ -291,15 +317,14 @@ def evaluate_sanity_gates(
     persistence_mismatches: int,
     provider_failures: int,
     provider_requests: int,
+    repeat_display: dict[str, Any],
 ) -> dict[str, Any]:
     failures: list[str] = []
     warnings: list[str] = []
     valid_rate = summary["ballots"]["valid_rate"] or 0.0
     provider_failure_rate = _rate(provider_failures, provider_requests) or 0.0
-    if valid_rate < 0.90:
-        failures.append("ballot validity is below 90%")
-    elif valid_rate < 0.95:
-        warnings.append("ballot validity is between 90% and 95%")
+    if valid_rate < 0.95:
+        failures.append("ballot validity is below 95%")
     if provider_failure_rate > 0.05:
         failures.append("provider failure/timeout rate exceeds 5%")
     if not identity_audit["passed"]:
@@ -308,22 +333,36 @@ def evaluate_sanity_gates(
         failures.append("candidate mapping integrity failed")
     if persistence_mismatches:
         failures.append("persisted round reconstruction mismatched committed results")
-    supported_rates = summary["positions"]["supported_rates"]
-    observed_rates = [rate for rate in supported_rates.values() if rate is not None]
-    supported_counts = summary["positions"]["supported_counts"]
-    occupied_positions = sum(count > 0 for count in supported_counts.values())
-    if summary["ballots"]["valid"] >= 7 and occupied_positions == 1:
-        failures.append(
-            "all valid support is concentrated in one anonymous display position"
-        )
-    elif observed_rates and max(observed_rates) >= 0.35:
-        warnings.append("one anonymous display position received at least 35% of support")
+    exact_match_rate = summary["responses"]["exact_match_rate"] or 0.0
+    if exact_match_rate < 0.50:
+        warnings.append("response exact-match rate is below 50%")
+    chance_baseline = summary["objective_agreement"][
+        "mean_tie_aware_chance_baseline"
+    ]
+    if chance_baseline == 1.0:
+        warnings.append("objective agreement is uninformative because all candidates tie")
+    elif chance_baseline is not None and chance_baseline >= 0.50:
+        warnings.append("objective agreement has a tie-aware chance baseline of at least 50%")
+    position_shares = [summary["positions"]["max_supported_position_share"]]
+    position_shares.append(repeat_display.get("max_selected_position_share"))
+    max_position_share = max(
+        (share for share in position_shares if share is not None), default=None
+    )
+    if max_position_share is not None and max_position_share >= 0.80:
+        failures.append("one anonymous display position received at least 80% of support")
+    elif max_position_share is not None and max_position_share >= 0.60:
+        warnings.append("one anonymous display position received 60% to 80% of support")
+    reorder_valid_rate = _rate(repeat_display["valid"], repeat_display["attempts"]) or 0.0
+    if reorder_valid_rate < 0.90:
+        failures.append("controlled reorder ballot validity is below 90%")
     return {
         "recommendation": "REVISE BEFORE E01" if failures else "READY FOR E01",
         "failures": failures,
         "warnings": warnings,
         "ballot_validity_rate": valid_rate,
         "provider_failure_rate": provider_failure_rate,
+        "controlled_reorder_validity_rate": reorder_valid_rate,
+        "max_supported_position_share": max_position_share,
     }
 
 
@@ -353,6 +392,7 @@ def render_markdown_report(report: dict[str, Any]) -> str:
         f"- Exact-match responses: {summary['responses']['exact_match']}",
         f"- Ballot attempts: {summary['ballots']['attempts']}",
         f"- Valid ballots: {summary['ballots']['valid']}",
+        f"- Strict schema compliance rate: {summary['ballots']['valid_rate']}",
         f"- Abstentions: {summary['ballots']['abstentions']}",
         f"- Invalid reasons: `{invalid}`",
         "",
@@ -364,6 +404,9 @@ def render_markdown_report(report: dict[str, Any]) -> str:
         "## Anonymous Position Distribution",
         "",
         *[f"- {label}: {positions[label]}" for label in LABELS],
+        f"- Maximum selected-position share: {summary['positions']['max_supported_position_share']}",
+        f"- Unique supported response contents: {summary['content_vs_position']['unique_supported_contents']}",
+        f"- Maximum supported-content share: {summary['content_vs_position']['max_supported_content_share']}",
         "",
         "## Length And Runtime",
         "",
@@ -380,6 +423,9 @@ def render_markdown_report(report: dict[str, Any]) -> str:
         f"- Candidate mapping: {summary['candidate_mapping']['valid']}",
         f"- Persistence mismatches: {report['persistence']['mismatches']}",
         f"- Repeat-display choice consistency: {report['repeat_display']['choice_consistency']}",
+        f"- Repeat-display validity: {report['repeat_display']['valid']}/{report['repeat_display']['attempts']}",
+        f"- Repeat-display maximum position share: {report['repeat_display']['max_selected_position_share']}",
+        f"- Native-schema ballot requests: {report['structured_output']['ballot_requests']}",
         f"- Fixed response prompt unique outputs: {report['nondeterminism']['response_unique_outputs']}",
         f"- Fixed ballot prompt unique outputs: {report['nondeterminism']['ballot_unique_outputs']}",
         "",

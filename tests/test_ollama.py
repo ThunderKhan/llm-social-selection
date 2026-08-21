@@ -50,7 +50,12 @@ def encoded(value: object) -> bytes:
 
 
 def generate(
-    provider: OllamaProvider, agent: AgentIdentity, task: Task, *, seed: int = 42
+    provider: OllamaProvider,
+    agent: AgentIdentity,
+    task: Task,
+    *,
+    seed: int = 42,
+    response_schema: dict[str, object] | None = None,
 ):
     return provider.generate(
         agent=agent,
@@ -58,6 +63,7 @@ def generate(
         prompt="Return only the final answer to 2 + 2.",
         request_id="request-001",
         seed=seed,
+        response_schema=response_schema,
     )
 
 
@@ -127,6 +133,24 @@ def test_generate_builds_expected_request_and_parses_metadata(
     assert output.latency_ms == 2.5
     assert output.token_count == 3
     assert output.seed == (2**63 + 5) % (2**31 - 1)
+
+
+def test_generate_maps_response_schema_to_ollama_format(
+    agent: AgentIdentity, task: Task
+) -> None:
+    transport = FakeTransport([encoded({"response": '{"choice":"B"}'})])
+    provider = OllamaProvider(transport=transport)
+    schema = {
+        "type": "object",
+        "properties": {"choice": {"type": "string", "enum": ["B", "C"]}},
+        "required": ["choice"],
+        "additionalProperties": False,
+    }
+
+    generate(provider, agent, task, response_schema=schema)
+
+    body = json.loads(transport.requests[0].data.decode("utf-8"))
+    assert body["format"] == schema
 
 
 @pytest.mark.parametrize("body", [b"not-json", b"[]"])
