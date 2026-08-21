@@ -45,6 +45,7 @@ class TrialRunner:
         provider: ModelProvider,
         event_store: SQLiteEventStore,
         round_engine: RoundEngine | None = None,
+        agent_id_namespace: str | None = None,
     ) -> None:
         if not isinstance(total_rounds, int) or isinstance(total_rounds, bool) or total_rounds <= 0:
             raise TrialError("total_rounds must be a positive integer")
@@ -64,17 +65,20 @@ class TrialRunner:
         self.provider = provider
         self.event_store = event_store
         self.round_engine = round_engine or RoundEngine()
+        self.agent_id_namespace = agent_id_namespace or trial_id
         self.profile_pool_hash = profile_pool_hash(self.profiles)
         self.initial_population = build_initial_population(
             trial_id=trial_id,
             trial_seed=trial_seed,
             profiles=self.profiles,
+            agent_id_namespace=self.agent_id_namespace,
         )
         self.replacement_queue = FixedReplacementQueue.build(
             trial_id=trial_id,
             trial_seed=trial_seed,
             profiles=self.profiles,
             count=max(total_rounds - 1, 0),
+            agent_id_namespace=self.agent_id_namespace,
         )
 
     def initialize(self) -> TrialState:

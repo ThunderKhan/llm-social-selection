@@ -51,6 +51,7 @@ class FixedReplacementQueue(ReplacementStrategy):
         trial_seed: int,
         profiles: Mapping[str, PromptProfile],
         count: int,
+        agent_id_namespace: str | None = None,
     ) -> "FixedReplacementQueue":
         if not isinstance(count, int) or isinstance(count, bool) or count < 0:
             raise ReplacementError("replacement count must be a non-negative integer")
@@ -74,12 +75,13 @@ class FixedReplacementQueue(ReplacementStrategy):
             ordered.extend(block)
             block_index += 1
 
+        identity_namespace = agent_id_namespace or trial_id
         candidates = tuple(
             ReplacementCandidate(
                 queue_index=index,
                 profile_id=profile_id,
                 agent=AgentIdentity(
-                    agent_id=f"{trial_id}-replacement-{index:03d}",
+                    agent_id=f"{identity_namespace}-replacement-{index:03d}",
                     profile_id=profile_id,
                     display_label=f"Replacement {index + 1}",
                     generation=0,

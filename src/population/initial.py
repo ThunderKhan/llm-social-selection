@@ -14,6 +14,7 @@ def build_initial_population(
     trial_id: str,
     trial_seed: int,
     profiles: Mapping[str, PromptProfile],
+    agent_id_namespace: str | None = None,
 ) -> Population:
     profile_ids = sorted(profiles)
     if len(profile_ids) < 8:
@@ -31,10 +32,11 @@ def build_initial_population(
             INITIAL_POPULATION_VERSION,
         )
     ).shuffle(profile_ids)
+    identity_namespace = agent_id_namespace or trial_id
     return Population(
         tuple(
             AgentIdentity(
-                agent_id=f"{trial_id}-agent-{index:03d}",
+                agent_id=f"{identity_namespace}-agent-{index:03d}",
                 profile_id=profile_id,
                 display_label=f"Participant {index}",
                 generation=0,
