@@ -10,7 +10,7 @@
     "source": "Original deterministic items adaptively authored from E02A-v3 failure diagnostics",
     "license": "Project-internal; governed by the repository license",
     "adaptation_basis": "E02A-v3 raw-output patterns from e02a_candidates_v2.json under the eight frozen E01 profiles",
-    "design_policy": "Target boundary behaviors with one-operation and shallow two-operation tasks; avoid Boolean true/false and multiple-choice families because v3 exposed default-token/option bias; do not reuse v3 outcomes as validation",
+    "design_policy": "Target boundary behaviors with one-operation and shallow two-operation tasks inside the existing stable task taxonomy; avoid Boolean true/false and multiple-choice families because v3 exposed default-token/option bias; character-position probes are string tasks and operator/code probes are symbolic tasks; do not reuse v3 outcomes as validation",
     "validation_protocol": "Profile-aware calibration: 8 frozen E01 profiles x 2 seeded repeats per candidate; fresh 8-profile holdout on shortlisted tasks",
     "inference_settings": "Ollama qwen3:0.6b; temperature=0; num_predict=32; think=false",
     "scoring_policy": "exact-match-v1 unchanged; no fuzzy scoring, answer extraction, or LLM judge",
@@ -298,143 +298,143 @@
       "scorer_version": "exact-match-v1"
     },
     {
-      "task_id": "index-201",
-      "family": "indexing",
+      "task_id": "string-211",
+      "family": "string",
       "prompt": "Using 1-based indexing, what is the 3rd character of PLANET?\n\nOUTPUT REQUIREMENT:\nReturn only the single uppercase character.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
       "expected_answer": "A",
       "scorer_version": "exact-match-v1"
     },
     {
-      "task_id": "index-202",
-      "family": "indexing",
+      "task_id": "string-212",
+      "family": "string",
       "prompt": "Using 1-based indexing, what is the 5th character of ORANGE?\n\nOUTPUT REQUIREMENT:\nReturn only the single uppercase character.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
       "expected_answer": "G",
       "scorer_version": "exact-match-v1"
     },
     {
-      "task_id": "index-203",
-      "family": "indexing",
+      "task_id": "string-213",
+      "family": "string",
       "prompt": "Using 1-based indexing, what is the 2nd character of VECTOR?\n\nOUTPUT REQUIREMENT:\nReturn only the single uppercase character.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
       "expected_answer": "E",
       "scorer_version": "exact-match-v1"
     },
     {
-      "task_id": "index-204",
-      "family": "indexing",
+      "task_id": "string-214",
+      "family": "string",
       "prompt": "Using 1-based indexing, what is the 4th character of SYSTEM?\n\nOUTPUT REQUIREMENT:\nReturn only the single uppercase character.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
       "expected_answer": "T",
       "scorer_version": "exact-match-v1"
     },
     {
-      "task_id": "index-205",
-      "family": "indexing",
+      "task_id": "string-215",
+      "family": "string",
       "prompt": "Using 1-based indexing, what is the 6th character of PLANETS?\n\nOUTPUT REQUIREMENT:\nReturn only the single uppercase character.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
       "expected_answer": "T",
       "scorer_version": "exact-match-v1"
     },
     {
-      "task_id": "index-206",
-      "family": "indexing",
+      "task_id": "string-216",
+      "family": "string",
       "prompt": "What character comes immediately before the final character in ROBOT?\n\nOUTPUT REQUIREMENT:\nReturn only the single uppercase character.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
       "expected_answer": "O",
       "scorer_version": "exact-match-v1"
     },
     {
-      "task_id": "index-207",
-      "family": "indexing",
+      "task_id": "string-217",
+      "family": "string",
       "prompt": "What character comes immediately after the first character in CABLE?\n\nOUTPUT REQUIREMENT:\nReturn only the single uppercase character.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
       "expected_answer": "A",
       "scorer_version": "exact-match-v1"
     },
     {
-      "task_id": "index-208",
-      "family": "indexing",
+      "task_id": "string-218",
+      "family": "string",
       "prompt": "What is the middle character of the seven-character string NETWORK?\n\nOUTPUT REQUIREMENT:\nReturn only the single uppercase character.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
       "expected_answer": "W",
       "scorer_version": "exact-match-v1"
     },
     {
-      "task_id": "index-209",
-      "family": "indexing",
+      "task_id": "string-219",
+      "family": "string",
       "prompt": "Using 1-based indexing, what is the 4th character of QUARTZ?\n\nOUTPUT REQUIREMENT:\nReturn only the single uppercase character.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
       "expected_answer": "R",
       "scorer_version": "exact-match-v1"
     },
     {
-      "task_id": "index-210",
-      "family": "indexing",
+      "task_id": "string-220",
+      "family": "string",
       "prompt": "What is the second-to-last character of PYTHON?\n\nOUTPUT REQUIREMENT:\nReturn only the single uppercase character.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
       "expected_answer": "O",
       "scorer_version": "exact-match-v1"
     },
     {
-      "task_id": "map-201",
-      "family": "mapping",
-      "prompt": "Codebook: A=7, B=4, C=9. What integer is mapped to B?\n\nOUTPUT REQUIREMENT:\nReturn only the integer.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
-      "expected_answer": "4",
-      "scorer_version": "exact-match-v1"
-    },
-    {
-      "task_id": "map-202",
-      "family": "mapping",
-      "prompt": "Codebook: red=13, blue=6, green=8. What integer is mapped to green?\n\nOUTPUT REQUIREMENT:\nReturn only the integer.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
-      "expected_answer": "8",
-      "scorer_version": "exact-match-v1"
-    },
-    {
-      "task_id": "map-203",
-      "family": "mapping",
-      "prompt": "Codebook: cat=15, dog=11, owl=19. What integer is mapped to dog?\n\nOUTPUT REQUIREMENT:\nReturn only the integer.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
-      "expected_answer": "11",
-      "scorer_version": "exact-match-v1"
-    },
-    {
-      "task_id": "map-204",
-      "family": "mapping",
-      "prompt": "Codebook: X=3, Y=12, Z=5. What integer is mapped to Y?\n\nOUTPUT REQUIREMENT:\nReturn only the integer.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
+      "task_id": "symbolic-201",
+      "family": "symbolic",
+      "prompt": "Let @ mean addition. Evaluate 7 @ 5.\n\nOUTPUT REQUIREMENT:\nReturn only the integer.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
       "expected_answer": "12",
       "scorer_version": "exact-match-v1"
     },
     {
-      "task_id": "map-205",
-      "family": "mapping",
-      "prompt": "Codebook: moon=21, sun=14, star=18. What integer is mapped to star?\n\nOUTPUT REQUIREMENT:\nReturn only the integer.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
-      "expected_answer": "18",
-      "scorer_version": "exact-match-v1"
-    },
-    {
-      "task_id": "map-206",
-      "family": "mapping",
-      "prompt": "Codebook: p=16, q=10, r=7. What integer is mapped to p?\n\nOUTPUT REQUIREMENT:\nReturn only the integer.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
-      "expected_answer": "16",
-      "scorer_version": "exact-match-v1"
-    },
-    {
-      "task_id": "map-207",
-      "family": "mapping",
-      "prompt": "Codebook: north=25, south=17, east=13. What integer is mapped to east?\n\nOUTPUT REQUIREMENT:\nReturn only the integer.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
+      "task_id": "symbolic-202",
+      "family": "symbolic",
+      "prompt": "Let # mean subtraction. Evaluate 19 # 6.\n\nOUTPUT REQUIREMENT:\nReturn only the integer.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
       "expected_answer": "13",
       "scorer_version": "exact-match-v1"
     },
     {
-      "task_id": "map-208",
-      "family": "mapping",
-      "prompt": "Codebook: alpha=31, beta=23, gamma=29. What integer is mapped to beta?\n\nOUTPUT REQUIREMENT:\nReturn only the integer.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
-      "expected_answer": "23",
-      "scorer_version": "exact-match-v1"
-    },
-    {
-      "task_id": "map-209",
-      "family": "mapping",
-      "prompt": "Codebook: circle=9, square=15, triangle=12. What integer is mapped to square?\n\nOUTPUT REQUIREMENT:\nReturn only the integer.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
-      "expected_answer": "15",
-      "scorer_version": "exact-match-v1"
-    },
-    {
-      "task_id": "map-210",
-      "family": "mapping",
-      "prompt": "Codebook: k=27, m=18, n=24. What integer is mapped to n?\n\nOUTPUT REQUIREMENT:\nReturn only the integer.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
+      "task_id": "symbolic-203",
+      "family": "symbolic",
+      "prompt": "Let @ mean multiplication. Evaluate 4 @ 6.\n\nOUTPUT REQUIREMENT:\nReturn only the integer.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
       "expected_answer": "24",
+      "scorer_version": "exact-match-v1"
+    },
+    {
+      "task_id": "symbolic-204",
+      "family": "symbolic",
+      "prompt": "Let % mean integer division. Evaluate 42 % 7.\n\nOUTPUT REQUIREMENT:\nReturn only the integer.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
+      "expected_answer": "6",
+      "scorer_version": "exact-match-v1"
+    },
+    {
+      "task_id": "symbolic-205",
+      "family": "symbolic",
+      "prompt": "Let @ mean addition and # mean multiplication. Evaluate 3 @ 4 # 2. Apply multiplication before addition.\n\nOUTPUT REQUIREMENT:\nReturn only the integer.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
+      "expected_answer": "11",
+      "scorer_version": "exact-match-v1"
+    },
+    {
+      "task_id": "symbolic-206",
+      "family": "symbolic",
+      "prompt": "Let @ mean subtraction and # mean addition. Evaluate 18 @ 7 # 3 from left to right.\n\nOUTPUT REQUIREMENT:\nReturn only the integer.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
+      "expected_answer": "14",
+      "scorer_version": "exact-match-v1"
+    },
+    {
+      "task_id": "symbolic-207",
+      "family": "symbolic",
+      "prompt": "Let @ mean multiplication and # mean subtraction. Evaluate 5 @ 4 # 3 from left to right.\n\nOUTPUT REQUIREMENT:\nReturn only the integer.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
+      "expected_answer": "17",
+      "scorer_version": "exact-match-v1"
+    },
+    {
+      "task_id": "symbolic-208",
+      "family": "symbolic",
+      "prompt": "Let @ mean addition and # mean subtraction. Evaluate 9 @ 8 # 5 from left to right.\n\nOUTPUT REQUIREMENT:\nReturn only the integer.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
+      "expected_answer": "12",
+      "scorer_version": "exact-match-v1"
+    },
+    {
+      "task_id": "symbolic-209",
+      "family": "symbolic",
+      "prompt": "Let @ mean integer division and # mean addition. Evaluate 36 @ 6 # 7 from left to right.\n\nOUTPUT REQUIREMENT:\nReturn only the integer.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
+      "expected_answer": "13",
+      "scorer_version": "exact-match-v1"
+    },
+    {
+      "task_id": "symbolic-210",
+      "family": "symbolic",
+      "prompt": "Let @ mean multiplication and # mean addition. Evaluate 3 @ 5 # 4 from left to right.\n\nOUTPUT REQUIREMENT:\nReturn only the integer.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
+      "expected_answer": "19",
       "scorer_version": "exact-match-v1"
     }
   ]
