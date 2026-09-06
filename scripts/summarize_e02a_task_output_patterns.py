@@ -2,10 +2,13 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from collections import Counter, defaultdict
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
 from src.scoring import normalize_answer  # noqa: E402
 from src.tasks.calibration import load_task_set, output_format_valid  # noqa: E402
@@ -102,7 +105,11 @@ def main() -> int:
         )
         for output, count in outputs.most_common(args.top_outputs):
             normalized = normalize_answer(output)
-            marker = "CORRECT" if normalized == normalize_answer(task.expected_answer or "") else "wrong"
+            marker = (
+                "CORRECT"
+                if normalized == normalize_answer(task.expected_answer or "")
+                else "wrong"
+            )
             compact = output.replace("\r", "\\r").replace("\n", "\\n")
             if len(compact) > 120:
                 compact = compact[:117] + "..."
