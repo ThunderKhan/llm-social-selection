@@ -1,0 +1,441 @@
+{
+  "schema_version": 1,
+  "task_set_version": "e02a-candidates-v4-adaptive",
+  "created_for": "E02A objective-task apparatus revision after v3 profile-aware diagnostics",
+  "scorer_version": "exact-match-v1",
+  "model_used_for_validation": "qwen3:0.6b",
+  "validation_date": "2026-09-06",
+  "status": "candidate",
+  "provenance": {
+    "source": "Original deterministic items adaptively authored from E02A-v3 failure diagnostics",
+    "license": "Project-internal; governed by the repository license",
+    "adaptation_basis": "E02A-v3 raw-output patterns from e02a_candidates_v2.json under the eight frozen E01 profiles",
+    "design_policy": "Target boundary behaviors with one-operation and shallow two-operation tasks; avoid Boolean true/false and multiple-choice families because v3 exposed default-token/option bias; do not reuse v3 outcomes as validation",
+    "validation_protocol": "Profile-aware calibration: 8 frozen E01 profiles x 2 seeded repeats per candidate; fresh 8-profile holdout on shortlisted tasks",
+    "inference_settings": "Ollama qwen3:0.6b; temperature=0; num_predict=32; think=false",
+    "scoring_policy": "exact-match-v1 unchanged; no fuzzy scoring, answer extraction, or LLM judge",
+    "dependency": "If E02B changes the profile set or profile prompts, this task calibration must be rerun before E03"
+  },
+  "tasks": [
+    {
+      "task_id": "arith-201",
+      "family": "arithmetic",
+      "prompt": "Compute 14 + 9.\n\nOUTPUT REQUIREMENT:\nReturn only the integer.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
+      "expected_answer": "23",
+      "scorer_version": "exact-match-v1"
+    },
+    {
+      "task_id": "arith-202",
+      "family": "arithmetic",
+      "prompt": "Compute 31 - 17.\n\nOUTPUT REQUIREMENT:\nReturn only the integer.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
+      "expected_answer": "14",
+      "scorer_version": "exact-match-v1"
+    },
+    {
+      "task_id": "arith-203",
+      "family": "arithmetic",
+      "prompt": "Compute 7 times 6.\n\nOUTPUT REQUIREMENT:\nReturn only the integer.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
+      "expected_answer": "42",
+      "scorer_version": "exact-match-v1"
+    },
+    {
+      "task_id": "arith-204",
+      "family": "arithmetic",
+      "prompt": "Compute 48 divided by 6.\n\nOUTPUT REQUIREMENT:\nReturn only the integer.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
+      "expected_answer": "8",
+      "scorer_version": "exact-match-v1"
+    },
+    {
+      "task_id": "arith-205",
+      "family": "arithmetic",
+      "prompt": "Compute 9 + 5, then subtract 3.\n\nOUTPUT REQUIREMENT:\nReturn only the integer.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
+      "expected_answer": "11",
+      "scorer_version": "exact-match-v1"
+    },
+    {
+      "task_id": "arith-206",
+      "family": "arithmetic",
+      "prompt": "Compute 5 times 4, then add 3.\n\nOUTPUT REQUIREMENT:\nReturn only the integer.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
+      "expected_answer": "23",
+      "scorer_version": "exact-match-v1"
+    },
+    {
+      "task_id": "arith-207",
+      "family": "arithmetic",
+      "prompt": "Compute 36 divided by 4, then add 2.\n\nOUTPUT REQUIREMENT:\nReturn only the integer.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
+      "expected_answer": "11",
+      "scorer_version": "exact-match-v1"
+    },
+    {
+      "task_id": "arith-208",
+      "family": "arithmetic",
+      "prompt": "Compute 27 - 8 - 6.\n\nOUTPUT REQUIREMENT:\nReturn only the integer.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
+      "expected_answer": "13",
+      "scorer_version": "exact-match-v1"
+    },
+    {
+      "task_id": "arith-209",
+      "family": "arithmetic",
+      "prompt": "Compute 3 times 8, then subtract 5.\n\nOUTPUT REQUIREMENT:\nReturn only the integer.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
+      "expected_answer": "19",
+      "scorer_version": "exact-match-v1"
+    },
+    {
+      "task_id": "arith-210",
+      "family": "arithmetic",
+      "prompt": "Compute 50 divided by 5, then add 7.\n\nOUTPUT REQUIREMENT:\nReturn only the integer.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
+      "expected_answer": "17",
+      "scorer_version": "exact-match-v1"
+    },
+    {
+      "task_id": "count-201",
+      "family": "counting",
+      "prompt": "How many lowercase letter a characters are in bananarama?\n\nOUTPUT REQUIREMENT:\nReturn only the integer.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
+      "expected_answer": "5",
+      "scorer_version": "exact-match-v1"
+    },
+    {
+      "task_id": "count-202",
+      "family": "counting",
+      "prompt": "How many lowercase letter s characters are in mississippi?\n\nOUTPUT REQUIREMENT:\nReturn only the integer.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
+      "expected_answer": "4",
+      "scorer_version": "exact-match-v1"
+    },
+    {
+      "task_id": "count-203",
+      "family": "counting",
+      "prompt": "How many digit 7 characters are in 70717727?\n\nOUTPUT REQUIREMENT:\nReturn only the integer.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
+      "expected_answer": "5",
+      "scorer_version": "exact-match-v1"
+    },
+    {
+      "task_id": "count-204",
+      "family": "counting",
+      "prompt": "How many vowels are in education? Count a, e, i, o, and u.\n\nOUTPUT REQUIREMENT:\nReturn only the integer.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
+      "expected_answer": "5",
+      "scorer_version": "exact-match-v1"
+    },
+    {
+      "task_id": "count-205",
+      "family": "counting",
+      "prompt": "How many words in blue red blue blue green are exactly blue?\n\nOUTPUT REQUIREMENT:\nReturn only the integer.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
+      "expected_answer": "3",
+      "scorer_version": "exact-match-v1"
+    },
+    {
+      "task_id": "count-206",
+      "family": "counting",
+      "prompt": "How many # symbols are in #@##@@###?\n\nOUTPUT REQUIREMENT:\nReturn only the integer.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
+      "expected_answer": "6",
+      "scorer_version": "exact-match-v1"
+    },
+    {
+      "task_id": "count-207",
+      "family": "counting",
+      "prompt": "How many lowercase letter t characters are in treatment?\n\nOUTPUT REQUIREMENT:\nReturn only the integer.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
+      "expected_answer": "3",
+      "scorer_version": "exact-match-v1"
+    },
+    {
+      "task_id": "count-208",
+      "family": "counting",
+      "prompt": "How many digit 1 characters are in 101110101?\n\nOUTPUT REQUIREMENT:\nReturn only the integer.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
+      "expected_answer": "6",
+      "scorer_version": "exact-match-v1"
+    },
+    {
+      "task_id": "count-209",
+      "family": "counting",
+      "prompt": "How many words are in one two three four five?\n\nOUTPUT REQUIREMENT:\nReturn only the integer.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
+      "expected_answer": "5",
+      "scorer_version": "exact-match-v1"
+    },
+    {
+      "task_id": "count-210",
+      "family": "counting",
+      "prompt": "How many lowercase letter x characters are in xoxxoxxx?\n\nOUTPUT REQUIREMENT:\nReturn only the integer.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
+      "expected_answer": "6",
+      "scorer_version": "exact-match-v1"
+    },
+    {
+      "task_id": "sequence-201",
+      "family": "sequence",
+      "prompt": "Continue the integer sequence: 4, 7, 10, 13, __.\n\nOUTPUT REQUIREMENT:\nReturn only the integer.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
+      "expected_answer": "16",
+      "scorer_version": "exact-match-v1"
+    },
+    {
+      "task_id": "sequence-202",
+      "family": "sequence",
+      "prompt": "Continue the integer sequence: 18, 15, 12, 9, __.\n\nOUTPUT REQUIREMENT:\nReturn only the integer.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
+      "expected_answer": "6",
+      "scorer_version": "exact-match-v1"
+    },
+    {
+      "task_id": "sequence-203",
+      "family": "sequence",
+      "prompt": "Continue the integer sequence: 2, 4, 8, 16, __.\n\nOUTPUT REQUIREMENT:\nReturn only the integer.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
+      "expected_answer": "32",
+      "scorer_version": "exact-match-v1"
+    },
+    {
+      "task_id": "sequence-204",
+      "family": "sequence",
+      "prompt": "Continue the integer sequence: 1, 3, 6, 10, 15, __.\n\nOUTPUT REQUIREMENT:\nReturn only the integer.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
+      "expected_answer": "21",
+      "scorer_version": "exact-match-v1"
+    },
+    {
+      "task_id": "sequence-205",
+      "family": "sequence",
+      "prompt": "Continue the integer sequence: 5, 10, 20, 40, __.\n\nOUTPUT REQUIREMENT:\nReturn only the integer.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
+      "expected_answer": "80",
+      "scorer_version": "exact-match-v1"
+    },
+    {
+      "task_id": "sequence-206",
+      "family": "sequence",
+      "prompt": "Continue the integer sequence: 30, 27, 23, 18, __.\n\nOUTPUT REQUIREMENT:\nReturn only the integer.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
+      "expected_answer": "12",
+      "scorer_version": "exact-match-v1"
+    },
+    {
+      "task_id": "sequence-207",
+      "family": "sequence",
+      "prompt": "Continue the integer sequence: 1, 4, 9, 16, __.\n\nOUTPUT REQUIREMENT:\nReturn only the integer.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
+      "expected_answer": "25",
+      "scorer_version": "exact-match-v1"
+    },
+    {
+      "task_id": "sequence-208",
+      "family": "sequence",
+      "prompt": "Continue the integer sequence: 2, 3, 5, 8, 12, __.\n\nOUTPUT REQUIREMENT:\nReturn only the integer.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
+      "expected_answer": "17",
+      "scorer_version": "exact-match-v1"
+    },
+    {
+      "task_id": "sequence-209",
+      "family": "sequence",
+      "prompt": "Continue the integer sequence: 81, 27, 9, 3, __.\n\nOUTPUT REQUIREMENT:\nReturn only the integer.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
+      "expected_answer": "1",
+      "scorer_version": "exact-match-v1"
+    },
+    {
+      "task_id": "sequence-210",
+      "family": "sequence",
+      "prompt": "Continue the integer sequence: 7, 11, 19, 35, __.\n\nOUTPUT REQUIREMENT:\nReturn only the integer.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
+      "expected_answer": "67",
+      "scorer_version": "exact-match-v1"
+    },
+    {
+      "task_id": "string-201",
+      "family": "string",
+      "prompt": "Rotate the lowercase string abcdef left by one position.\n\nOUTPUT REQUIREMENT:\nReturn only the resulting string.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
+      "expected_answer": "bcdefa",
+      "scorer_version": "exact-match-v1"
+    },
+    {
+      "task_id": "string-202",
+      "family": "string",
+      "prompt": "Rotate the lowercase string abcdef right by one position.\n\nOUTPUT REQUIREMENT:\nReturn only the resulting string.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
+      "expected_answer": "fabcde",
+      "scorer_version": "exact-match-v1"
+    },
+    {
+      "task_id": "string-203",
+      "family": "string",
+      "prompt": "Concatenate the uppercase strings SUN and SET with no separator.\n\nOUTPUT REQUIREMENT:\nReturn only the resulting string.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
+      "expected_answer": "SUNSET",
+      "scorer_version": "exact-match-v1"
+    },
+    {
+      "task_id": "string-204",
+      "family": "string",
+      "prompt": "Remove every lowercase letter x from xaxbxc.\n\nOUTPUT REQUIREMENT:\nReturn only the resulting string.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
+      "expected_answer": "abc",
+      "scorer_version": "exact-match-v1"
+    },
+    {
+      "task_id": "string-205",
+      "family": "string",
+      "prompt": "Replace each lowercase letter a in papaya with uppercase X.\n\nOUTPUT REQUIREMENT:\nReturn only the resulting string.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
+      "expected_answer": "pXpXyX",
+      "scorer_version": "exact-match-v1"
+    },
+    {
+      "task_id": "string-206",
+      "family": "string",
+      "prompt": "Reverse the uppercase string DOG.\n\nOUTPUT REQUIREMENT:\nReturn only the resulting string.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
+      "expected_answer": "GOD",
+      "scorer_version": "exact-match-v1"
+    },
+    {
+      "task_id": "string-207",
+      "family": "string",
+      "prompt": "Take the first letter of each word: silver orange moon. Return the letters as one uppercase string.\n\nOUTPUT REQUIREMENT:\nReturn only the resulting string.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
+      "expected_answer": "SOM",
+      "scorer_version": "exact-match-v1"
+    },
+    {
+      "task_id": "string-208",
+      "family": "string",
+      "prompt": "Swap the first and last characters of the uppercase string MARS.\n\nOUTPUT REQUIREMENT:\nReturn only the resulting string.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
+      "expected_answer": "SARM",
+      "scorer_version": "exact-match-v1"
+    },
+    {
+      "task_id": "string-209",
+      "family": "string",
+      "prompt": "Take the first three characters of the uppercase string PLANET.\n\nOUTPUT REQUIREMENT:\nReturn only the resulting string.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
+      "expected_answer": "PLA",
+      "scorer_version": "exact-match-v1"
+    },
+    {
+      "task_id": "string-210",
+      "family": "string",
+      "prompt": "Take the last three characters of the uppercase string PLANET.\n\nOUTPUT REQUIREMENT:\nReturn only the resulting string.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
+      "expected_answer": "NET",
+      "scorer_version": "exact-match-v1"
+    },
+    {
+      "task_id": "index-201",
+      "family": "indexing",
+      "prompt": "Using 1-based indexing, what is the 3rd character of PLANET?\n\nOUTPUT REQUIREMENT:\nReturn only the single uppercase character.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
+      "expected_answer": "A",
+      "scorer_version": "exact-match-v1"
+    },
+    {
+      "task_id": "index-202",
+      "family": "indexing",
+      "prompt": "Using 1-based indexing, what is the 5th character of ORANGE?\n\nOUTPUT REQUIREMENT:\nReturn only the single uppercase character.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
+      "expected_answer": "G",
+      "scorer_version": "exact-match-v1"
+    },
+    {
+      "task_id": "index-203",
+      "family": "indexing",
+      "prompt": "Using 1-based indexing, what is the 2nd character of VECTOR?\n\nOUTPUT REQUIREMENT:\nReturn only the single uppercase character.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
+      "expected_answer": "E",
+      "scorer_version": "exact-match-v1"
+    },
+    {
+      "task_id": "index-204",
+      "family": "indexing",
+      "prompt": "Using 1-based indexing, what is the 4th character of SYSTEM?\n\nOUTPUT REQUIREMENT:\nReturn only the single uppercase character.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
+      "expected_answer": "T",
+      "scorer_version": "exact-match-v1"
+    },
+    {
+      "task_id": "index-205",
+      "family": "indexing",
+      "prompt": "Using 1-based indexing, what is the 6th character of PLANETS?\n\nOUTPUT REQUIREMENT:\nReturn only the single uppercase character.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
+      "expected_answer": "T",
+      "scorer_version": "exact-match-v1"
+    },
+    {
+      "task_id": "index-206",
+      "family": "indexing",
+      "prompt": "What character comes immediately before the final character in ROBOT?\n\nOUTPUT REQUIREMENT:\nReturn only the single uppercase character.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
+      "expected_answer": "O",
+      "scorer_version": "exact-match-v1"
+    },
+    {
+      "task_id": "index-207",
+      "family": "indexing",
+      "prompt": "What character comes immediately after the first character in CABLE?\n\nOUTPUT REQUIREMENT:\nReturn only the single uppercase character.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
+      "expected_answer": "A",
+      "scorer_version": "exact-match-v1"
+    },
+    {
+      "task_id": "index-208",
+      "family": "indexing",
+      "prompt": "What is the middle character of the seven-character string NETWORK?\n\nOUTPUT REQUIREMENT:\nReturn only the single uppercase character.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
+      "expected_answer": "W",
+      "scorer_version": "exact-match-v1"
+    },
+    {
+      "task_id": "index-209",
+      "family": "indexing",
+      "prompt": "Using 1-based indexing, what is the 4th character of QUARTZ?\n\nOUTPUT REQUIREMENT:\nReturn only the single uppercase character.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
+      "expected_answer": "R",
+      "scorer_version": "exact-match-v1"
+    },
+    {
+      "task_id": "index-210",
+      "family": "indexing",
+      "prompt": "What is the second-to-last character of PYTHON?\n\nOUTPUT REQUIREMENT:\nReturn only the single uppercase character.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
+      "expected_answer": "O",
+      "scorer_version": "exact-match-v1"
+    },
+    {
+      "task_id": "map-201",
+      "family": "mapping",
+      "prompt": "Codebook: A=7, B=4, C=9. What integer is mapped to B?\n\nOUTPUT REQUIREMENT:\nReturn only the integer.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
+      "expected_answer": "4",
+      "scorer_version": "exact-match-v1"
+    },
+    {
+      "task_id": "map-202",
+      "family": "mapping",
+      "prompt": "Codebook: red=13, blue=6, green=8. What integer is mapped to green?\n\nOUTPUT REQUIREMENT:\nReturn only the integer.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
+      "expected_answer": "8",
+      "scorer_version": "exact-match-v1"
+    },
+    {
+      "task_id": "map-203",
+      "family": "mapping",
+      "prompt": "Codebook: cat=15, dog=11, owl=19. What integer is mapped to dog?\n\nOUTPUT REQUIREMENT:\nReturn only the integer.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
+      "expected_answer": "11",
+      "scorer_version": "exact-match-v1"
+    },
+    {
+      "task_id": "map-204",
+      "family": "mapping",
+      "prompt": "Codebook: X=3, Y=12, Z=5. What integer is mapped to Y?\n\nOUTPUT REQUIREMENT:\nReturn only the integer.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
+      "expected_answer": "12",
+      "scorer_version": "exact-match-v1"
+    },
+    {
+      "task_id": "map-205",
+      "family": "mapping",
+      "prompt": "Codebook: moon=21, sun=14, star=18. What integer is mapped to star?\n\nOUTPUT REQUIREMENT:\nReturn only the integer.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
+      "expected_answer": "18",
+      "scorer_version": "exact-match-v1"
+    },
+    {
+      "task_id": "map-206",
+      "family": "mapping",
+      "prompt": "Codebook: p=16, q=10, r=7. What integer is mapped to p?\n\nOUTPUT REQUIREMENT:\nReturn only the integer.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
+      "expected_answer": "16",
+      "scorer_version": "exact-match-v1"
+    },
+    {
+      "task_id": "map-207",
+      "family": "mapping",
+      "prompt": "Codebook: north=25, south=17, east=13. What integer is mapped to east?\n\nOUTPUT REQUIREMENT:\nReturn only the integer.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
+      "expected_answer": "13",
+      "scorer_version": "exact-match-v1"
+    },
+    {
+      "task_id": "map-208",
+      "family": "mapping",
+      "prompt": "Codebook: alpha=31, beta=23, gamma=29. What integer is mapped to beta?\n\nOUTPUT REQUIREMENT:\nReturn only the integer.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
+      "expected_answer": "23",
+      "scorer_version": "exact-match-v1"
+    },
+    {
+      "task_id": "map-209",
+      "family": "mapping",
+      "prompt": "Codebook: circle=9, square=15, triangle=12. What integer is mapped to square?\n\nOUTPUT REQUIREMENT:\nReturn only the integer.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
+      "expected_answer": "15",
+      "scorer_version": "exact-match-v1"
+    },
+    {
+      "task_id": "map-210",
+      "family": "mapping",
+      "prompt": "Codebook: k=27, m=18, n=24. What integer is mapped to n?\n\nOUTPUT REQUIREMENT:\nReturn only the integer.\nDo not explain.\nDo not repeat the question.\nDo not use Markdown.\nDo not prepend \"Answer:\".",
+      "expected_answer": "24",
+      "scorer_version": "exact-match-v1"
+    }
+  ]
+}
