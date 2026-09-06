@@ -2,12 +2,40 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from collections import Counter, defaultdict
 from pathlib import Path
 from statistics import mean
 
 
 ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from src.scoring import normalize_answer  # noqa: E402
+from src.tasks.calibration import load_task_set  # noqa: E402
+
+
+def attach_exact_match_scores(rows: list[dict], tasks_by_id: dict[str, object]) -> None:
+    """Reconstruct derived correctness from immutable raw evidence.
+
+    E02A checkpoint JSONL intentionally stores raw provider evidence before derived
+    scoring fields are added in memory by the runner. Diagnostics therefore must not
+    assume a persisted ``correct`` field; they recompute exact-match-v1 from the raw
+    output and the frozen task artifact.
+    """
+    for row in rows:
+        if row.get("status") != "ok":
+            continue
+        task_id = str(row.get("task_id", ""))
+        task = tasks_by_id.get(task_id)
+        if task is None:
+            raise ValueError(f"raw evidence references unknown task_id: {task_id}")
+        raw_output = row.get("raw_output")
+        if not isinstance(raw_output, str):
+            raise ValueError(f"successful evidence row has no raw_output: {row.get('evaluation_id')}")
+        expected = getattr(task, "expected_answer", None)
+        row["correct"] = normalize_answer(raw_output) == normalize_answer(expected or "")
 
 
 def main() -> int:
@@ -24,19 +52,30 @@ def main() -> int:
         type=Path,
         default=ROOT / "experiments" / "e02a_task_v3" / "e02a_task_v3_raw_evidence.jsonl",
     )
+    parser.add_argument(
+        "--candidates",
+        type=Path,
+        default=ROOT / "tasks" / "e02a_candidates_v2.json",
+    )
     args = parser.parse_args()
 
     if not args.report.exists():
         parser.error(f"report not found: {args.report}")
     if not args.evidence.exists():
         parser.error(f"evidence not found: {args.evidence}")
+    if not args.candidates.exists():
+        parser.error(f"candidate task artifact not found: {args.candidates}")
 
     report = json.loads(args.report.read_text(encoding="utf-8"))
+    artifact = load_task_set(args.candidates)
+    tasks_by_id = {task.task_id: task for task in artifact.tasks}
     rows = [
         json.loads(line)
         for line in args.evidence.read_text(encoding="utf-8").splitlines()
         if line.strip()
     ]
+    attach_exact_match_scores(rows, tasks_by_id)
+
     calibration = [
         row for row in rows if row.get("phase") == "task_calibration" and row.get("status") == "ok"
     ]
@@ -57,16 +96,32 @@ def main() -> int:
     shortlist = set(report["task_calibration"]["shortlist_task_ids"])
     final_ids = set(report["task_calibration"]["final_task_ids"])
 
+    reconstructed_task_correct = {
+        task_id: sum(bool(row["correct"]) for row in task_rows)
+        for task_id, task_rows in by_task.items()
+    }
+    report_mismatches = [
+        task_id
+        for task_id, item in task_meta.items()
+        if reconstructed_task_correct.get(task_id, 0) != int(item["correct"])
+    ]
+    if report_mismatches:
+        raise ValueError(
+            "reconstructed raw-evidence scores disagree with v3 report for tasks: "
+            + ", ".join(sorted(report_mismatches))
+        )
+
     print("E02A V3 Profile-Aware Diagnostic Summary")
     print(f"Report: {args.report}")
     print(f"Candidates: {report['task_calibration']['candidate_task_count']}")
     print(f"Shortlisted: {len(shortlist)} {sorted(shortlist)}")
     print(f"Final holdout-mixed: {len(final_ids)} {sorted(final_ids)}")
+    print("Raw evidence score reconstruction: PASS")
     print()
 
     print("Per-profile calibration accuracy")
     for profile_id, profile_rows in sorted(by_profile.items()):
-        correct = sum(bool(row.get("correct")) for row in profile_rows)
+        correct = sum(bool(row["correct"]) for row in profile_rows)
         total = len(profile_rows)
         approach = None
         if profile_rows:
@@ -83,7 +138,7 @@ def main() -> int:
     for task_id, task_rows in sorted(by_task.items()):
         profile_scores: dict[str, list[int]] = defaultdict(list)
         for row in task_rows:
-            profile_scores[str(row["profile_id"])].append(int(bool(row.get("correct"))))
+            profile_scores[str(row["profile_id"])].append(int(bool(row["correct"])))
         flat = [value for values in profile_scores.values() for value in values]
         if not flat:
             continue
@@ -146,12 +201,12 @@ def main() -> int:
             correct_profiles = [
                 str(row["profile_id"]).replace("e01-profile-", "P")
                 for row in task_rows
-                if row.get("correct")
+                if row["correct"]
             ]
             incorrect_profiles = [
                 str(row["profile_id"]).replace("e01-profile-", "P")
                 for row in task_rows
-                if not row.get("correct")
+                if not row["correct"]
             ]
             print(
                 f"{task_id}: correct={correct_profiles}; incorrect={incorrect_profiles}"
