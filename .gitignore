@@ -9,3 +9,4 @@ experiments/e01/*.sqlite
 experiments/e01/*.sqlite.lock
 experiments/e01/*.summary.json
 experiments/e01/analysis/
+experiments/e02a/
